@@ -1,0 +1,148 @@
+﻿<Window x:Class="RDinterface.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:RDinterface"
+        mc:Ignorable="d"
+        Title="LSC RD Interface" Height="650" Width="1200"
+        MinHeight="650" MinWidth="1200"
+        ResizeMode="CanMinimize">
+    <Grid>
+        <Grid x:Name="FunSelect" Height="450" Width="288" HorizontalAlignment="Left" VerticalAlignment="Top">
+            <Border BorderBrush="Black" BorderThickness="2"/>
+            <Label Content="Function" Height="30" Width="100" FontSize="18" Margin="34,50,154,370"/>
+            <ComboBox x:Name="cbFunction" SelectedIndex="0" BorderBrush="Black" BorderThickness="2" Height="40" Width="200" Margin="34,84,54,326" FontSize="18" VerticalContentAlignment="Center">
+                <ComboBoxItem Content="Profile Setting"/>
+                <ComboBoxItem Content="FW Update"/>
+            </ComboBox>
+        </Grid>
+        <Grid x:Name="FunWindow" Height="450" Width="900" HorizontalAlignment="Right" VerticalAlignment="Top">
+            <Border BorderBrush="Black" BorderThickness="2"/>
+            <TabControl x:Name="tcWindow" SelectedIndex="{Binding SelectedIndex, ElementName=cbFunction}" Height="450" Width="900" BorderBrush="Black" BorderThickness="2">
+                <TabItem Header="Profile Setting" Visibility="Collapsed">
+                    <Grid>
+                        <Label Content="CAN Device" Height="40" Width="150" Margin="-650,-300,0,0" FontSize="18" VerticalContentAlignment="Center"/>
+                        <ComboBox x:Name="cbDevice" Height="40" Width="150" Margin="-400,-300,0,0" FontSize="18" VerticalContentAlignment="Center"/>
+                        <Button x:Name="btnRefresh" Height="30" Width="30" Margin="-200,-300,0,0" Click="btnRefresh_Click">
+                            <Image Source="icon\Clear.png"/>
+                        </Button>
+                        <Label Content="CAN Baud Rate" Height="40" Width="150" Margin="100,-300,0,0" FontSize="18" VerticalContentAlignment="Center" HorizontalContentAlignment="Center"/>
+                        <ComboBox x:Name="cbBaudRate" Height="40" Width="150" Margin="400,-300,0,0" FontSize="18" VerticalContentAlignment="Center" SelectionChanged="cbBaudRate_SelectionChanged">
+                            <ComboBoxItem Content="1M" IsSelected="True"/>
+                            <ComboBoxItem Content="800K"/>
+                            <ComboBoxItem Content="500K"/>
+                            <ComboBoxItem Content="250K"/>
+                            <ComboBoxItem Content="125K"/>
+                            <ComboBoxItem Content="100K"/>
+                            <ComboBoxItem Content="95K"/>
+                            <ComboBoxItem Content="83K"/>
+                            <ComboBoxItem Content="50K"/>
+                            <ComboBoxItem Content="47K"/>
+                            <ComboBoxItem Content="33K"/>
+                            <ComboBoxItem Content="20K"/>
+                            <ComboBoxItem Content="10K"/>
+                            <ComboBoxItem Content="5K"/>
+                        </ComboBox>
+                        <Button x:Name="btnConnect" Content="Connect" Height="30" Width="80" Margin="750,-350,0,0" Click="btnConnect_Click"/>
+                        <Button x:Name="btnRelease" Content="Release" Height="30" Width="80" Margin="750,-250,0,0" Click="btnRelease_Click"/>
+                        <Button x:Name="btnWriteTest" Content="Write" Height="50" Width="50" Margin="0,200,0,0" Click="btnWriteTest_Click"/>
+                        <Button x:Name="btnReadTest" Content="Read" Height="50" Width="50" Margin="500,200,0,0" Click="btnReadTest_Click"/>
+                    </Grid>
+                </TabItem>
+                <TabItem Header="FW Update" Visibility="Collapsed">
+                    <Grid>
+                        <Grid>
+                            <CheckBox x:Name="cbBinA" Height="30" Width="30" Margin="42,30,820,361">
+                                <CheckBox.LayoutTransform>
+                                    <ScaleTransform ScaleX="2" ScaleY="2"/>
+                                </CheckBox.LayoutTransform>
+                            </CheckBox>
+                            <Label Content="A-Bin file source" Height="40" Width="150" FontSize="18" Margin="109,18,633,363" VerticalContentAlignment="Center"/>
+                            <Label x:Name="lblBinA" Height="40" Width="450" FontSize="18" Margin="299,18,143,363" BorderBrush="Black" BorderThickness="2" VerticalContentAlignment="Center"/>
+                            <Button x:Name="btnBinA" Height="40" Width="40" BorderBrush="Black" BorderThickness="2" Margin="794,16,58,365" Click="btnBinA_Click">
+                                <Image Source="icon\folder.png"/>
+                            </Button>
+                        </Grid>
+                        <Grid>
+                            <CheckBox x:Name="cbBinS" Height="30" Width="30" Margin="42,80,820,311">
+                                <CheckBox.LayoutTransform>
+                                    <ScaleTransform ScaleX="2" ScaleY="2"/>
+                                </CheckBox.LayoutTransform>
+                            </CheckBox>
+                            <Label Content="S-Bin file source" Height="40" Width="150" FontSize="18" Margin="109,68,633,313" VerticalContentAlignment="Center"/>
+                            <Label x:Name="lblBinS" Height="40" Width="450" FontSize="18" Margin="299,68,143,313" BorderBrush="Black" BorderThickness="2" VerticalContentAlignment="Center"/>
+                            <Button x:Name="btnBinS" Height="40" Width="40" BorderBrush="Black" BorderThickness="2" Margin="794,66,58,315" Click="btnBinS_Click">
+                                <Image Source="icon\folder.png"/>
+                            </Button>
+                        </Grid>
+                        <Grid>
+                            <CheckBox x:Name="cbBinP" Height="30" Width="30" Margin="42,130,820,261">
+                                <CheckBox.LayoutTransform>
+                                    <ScaleTransform ScaleX="2" ScaleY="2"/>
+                                </CheckBox.LayoutTransform>
+                            </CheckBox>
+                            <Label Content="P-Bin file source" Height="40" Width="150" FontSize="18" Margin="109,118,633,263" VerticalContentAlignment="Center"/>
+                            <Label x:Name="lblBinP" Height="40" Width="450" FontSize="18" Margin="299,118,143,263" BorderBrush="Black" BorderThickness="2" VerticalContentAlignment="Center"/>
+                            <Button x:Name="btnBinP" Height="40" Width="40" BorderBrush="Black" BorderThickness="2" Margin="794,116,58,265" Click="btnBinP_Click">
+                                <Image Source="icon\folder.png"/>
+                            </Button>
+                        </Grid>
+                        <Grid>
+                            <CheckBox x:Name="cbBinM1" Height="30" Width="30" Margin="42,180,820,211">
+                                <CheckBox.LayoutTransform>
+                                    <ScaleTransform ScaleX="2" ScaleY="2"/>
+                                </CheckBox.LayoutTransform>
+                            </CheckBox>
+                            <Label Content="M1-Bin file source" Height="40" Width="180" FontSize="18" Margin="99,168,613,213" VerticalContentAlignment="Center"/>
+                            <Label x:Name="lblBinM1" Height="40" Width="450" FontSize="18" Margin="299,168,143,213" BorderBrush="Black" BorderThickness="2" VerticalContentAlignment="Center"/>
+                            <Button x:Name="btnBinM1" Height="40" Width="40" BorderBrush="Black" BorderThickness="2" Margin="794,166,58,215" Click="btnBinM1_Click">
+                                <Image Source="icon\folder.png"/>
+                            </Button>
+                        </Grid>
+                        <Grid>
+                            <CheckBox x:Name="cbBinM2" Height="30" Width="30" Margin="42,230,820,161">
+                                <CheckBox.LayoutTransform>
+                                    <ScaleTransform ScaleX="2" ScaleY="2"/>
+                                </CheckBox.LayoutTransform>
+                            </CheckBox>
+                            <Label Content="M2-Bin file source" Height="40" Width="180" FontSize="18" Margin="99,218,613,163" VerticalContentAlignment="Center"/>
+                            <Label x:Name="lblBinM2" Height="40" Width="450" FontSize="18" Margin="299,218,143,163" BorderBrush="Black" BorderThickness="2" VerticalContentAlignment="Center"/>
+                            <Button x:Name="btnBinM2" Height="40" Width="40" BorderBrush="Black" BorderThickness="2" Margin="794,216,58,165" Click="btnBinM2_Click">
+                                <Image Source="icon\folder.png"/>
+                            </Button>
+                        </Grid>
+                        <ProgressBar x:Name="pbLoadScale" Height="40" Width="700" Margin="34,342,158,39" BorderBrush="Black" BorderThickness="2"/>
+                        <Button x:Name="btnBootLoad" Content="BootLoad" BorderBrush="Black" BorderThickness="2" Height="40" Width="100" FontSize="18" Margin="764,340,28,41"/>
+                    </Grid>
+                </TabItem>
+                <TabItem Header="Param Config" Visibility="Collapsed"/>
+                <TabItem Header="Register Config" Visibility="Collapsed"/>
+                <TabItem Header="Data Monitor Config" Visibility="Collapsed"/>
+                <TabItem Header="Data Monitor Plot" Visibility="Collapsed"/>
+            </TabControl>
+
+        </Grid>
+        <Grid x:Name="FunRawData" Height="166" Width="388" HorizontalAlignment="Left" VerticalAlignment="Bottom">
+            <Border BorderBrush="Black" BorderThickness="2"/>
+            <Label Content="CAN Raw Data" Height="30" Width="140" FontSize="18" Margin="12,12,236,124"/>
+            <DataGrid x:Name="dgRawData" IsReadOnly="True" Height="100" Width="350" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto" AutoGenerateColumns="False" Margin="19,51,19,15">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="Time" Binding="{Binding RawTime}" Width="70"/>
+                    <DataGridTextColumn Header="ID" Binding="{Binding RawID}" Width="50"/>
+                    <DataGridTextColumn Header="Length" Binding="{Binding RawLength}" Width="50"/>
+                    <DataGridTextColumn Header="Data" Binding="{Binding RawData}" Width="170"/>
+                </DataGrid.Columns>
+            </DataGrid>
+        </Grid>
+        <Grid x:Name="FunLog" Height="166" Width="800" HorizontalAlignment="Right" VerticalAlignment="Bottom">
+            <Border BorderBrush="Black" BorderThickness="2"/>
+            <Label Content="Alarm Log" Height="40" Width="100" FontSize="18" Margin="14,9,686,117"/>
+            <TextBox x:Name="tbAlarmLog" IsReadOnly="True" Height="110" Width="650" FontSize="18" Margin="12,45,138,11" BorderBrush="Black" BorderThickness="2" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto"/>
+            <Label Height="35" Width="100" Content="Clear log" FontSize="18" Margin="704,51,-4,80"/>
+            <Button x:Name="btnClear" BorderBrush="Black" BorderThickness="2" Height="50" Width="50" Margin="722,86,28,30" Click="btnClear_Click">
+                <Image Source="icon\Clear.png"/>
+            </Button>
+        </Grid>
+    </Grid>
+</Window>

@@ -1,0 +1,19 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <UseWPF>true</UseWPF>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="icon\Clear.png" />
+    <None Remove="icon\Folder.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="icon\Clear.png" />
+    <Resource Include="icon\Folder.png" />
+  </ItemGroup>
+
+</Project>

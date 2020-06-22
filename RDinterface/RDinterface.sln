@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30011.22
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RDinterface", "RDinterface.csproj", "{0DE9733D-C989-421B-9E61-625D994DB93F}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{0DE9733D-C989-421B-9E61-625D994DB93F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0DE9733D-C989-421B-9E61-625D994DB93F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0DE9733D-C989-421B-9E61-625D994DB93F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0DE9733D-C989-421B-9E61-625D994DB93F}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {6FDB5584-1161-4D06-B2E0-D299E96E2AB3}
+	EndGlobalSection
+EndGlobal
