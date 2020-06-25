@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -24,6 +25,7 @@ namespace RDinterface
     /// </summary>
     public partial class MainWindow : Window
     {
+        BaseCommand baseCommand = new BaseCommand();
         private TPCANHandle m_PcanHandle;   //DEVICE HANDLE
         private TPCANBaudrate m_Baudrate = TPCANBaudrate.PCAN_BAUD_500K;   //TRANSMIT BAUD RATE
         private TPCANType m_HwType = TPCANType.PCAN_TYPE_ISA;   //HARDWARE TYPE
@@ -76,62 +78,22 @@ namespace RDinterface
 
         private void btnClear_Click(object sender, RoutedEventArgs e)
         {
-            dgRawData.Items.Refresh();  //CLEAR HMI RAW DATA GRID
+            //CLEAR HMI RAW DATA GRID
+            dgRawData.Items.Refresh();
+            dgRawData.Items.Clear();
             tbAlarmLog.Text = "";   //CLEAR HMI ALARM LOG
         }
 
         private void btnWriteTest_Click(object sender, RoutedEventArgs e)
         {
             TPCANStatus stsResult;
-            var dataGrid = new RawDataFormat();
-            TPCANMsg CANMsg = new TPCANMsg();
-            CANMsg.DATA = new byte[8];
-
-            string[] test = new string[] { "02", "10", "03", "00", "00", "00", "00", "00" };   //TEST DATA
-
-            //CONFIGURATE THE MESSAGE
-            CANMsg.ID = Convert.ToUInt32("300", 16);
-            CANMsg.LEN = Convert.ToByte(8);
-            CANMsg.MSGTYPE = TPCANMessageType.PCAN_MESSAGE_STANDARD;
-
-            //GET TRANSMIT DATA MESSAGE
-            for (int i = 0; i < GetLengthFromDLC(CANMsg.LEN, true); i++)
-            {
-                CANMsg.DATA[i] = Convert.ToByte(test[i], 16);
-            }
-
-            stsResult = PCANBasic.Write(m_PcanHandle, ref CANMsg);
-
-            if (stsResult == TPCANStatus.PCAN_ERROR_OK)
-            {
-                dataGrid = new RawDataFormat
-                {
-                    RawTime = DateTime.Now.TimeOfDay.ToString(),
-                    RawID = CANMsg.ID.ToString(),
-                    RawLength = CANMsg.DATA.Length.ToString(),
-                    RawData = BitConverter.ToString(CANMsg.DATA).Replace("-", " ")
-                };
-
-                dgRawData.Items.Add(dataGrid);
-
-                tbAlarmLog.Text += "Message was successfully SENT \r\n";
-            }
-            else
-                tbAlarmLog.Text += stsResult.ToString() + "\r\n"; //SHOW ERROR
-        }
-
-        private void btnReadTest_Click(object sender, RoutedEventArgs e)
-        {
-            TPCANStatus stsResult;
-            var dataGrid = new RawDataFormat();
             string[] rawDatas = new string[4];
 
-            stsResult = ReadMessage(ref rawDatas);  //READ DATA FRAME
+            stsResult = baseCommand.Session_ExDiagnotic(m_PcanHandle, ref rawDatas);
+
             if (stsResult == TPCANStatus.PCAN_ERROR_OK)
             {
-                dataGrid = new RawDataFormat { RawTime = rawDatas[0], RawID = rawDatas[1], RawLength = rawDatas[2], RawData = rawDatas[3] };
-                dgRawData.Items.Add(dataGrid);
-                tbAlarmLog.Text += stsResult.ToString() + "\r\n";
+                UpdateRawData(rawDatas);
             }
             else
                 tbAlarmLog.Text += stsResult.ToString() + "\r\n"; //SHOW ERROR
@@ -153,20 +115,21 @@ namespace RDinterface
             if (dialogA.ShowDialog() == true)
             {
                 lblBinA.Content = dialogA.FileName;
-
                 try
                 {
                     using (StreamReader srA = new StreamReader(dialogA.FileName))
                     {
                         string line = await srA.ReadToEndAsync();
-                        tbAlarmLog.Text += line;
+                        line = line.Replace("\r\n", " ").Replace("  ", " ");
+                        string[] Databyte = line.Split(" ");
+                        //tbAlarmLog.Text += Databyte.Length;
                     }
                 }
                 catch (FileNotFoundException) { tbAlarmLog.Text += "BinA File not Found"; }
             }
         }
 
-        private void btnBinS_Click(object sender, RoutedEventArgs e)
+        private async void btnBinS_Click(object sender, RoutedEventArgs e)
         {
             OpenFileDialog dialogS = new OpenFileDialog();
             dialogS.Title = "Select file";
@@ -174,10 +137,18 @@ namespace RDinterface
             if (dialogS.ShowDialog() == true)
             {
                 lblBinS.Content = dialogS.FileName;
+                try
+                {
+                    using (StreamReader srS = new StreamReader(dialogS.FileName))
+                    {
+                        string line = await srS.ReadToEndAsync();
+                    }
+                }
+                catch (FileNotFoundException) { tbAlarmLog.Text += "BinS File not Found"; }
             }
         }
 
-        private void btnBinP_Click(object sender, RoutedEventArgs e)
+        private async void btnBinP_Click(object sender, RoutedEventArgs e)
         {
             OpenFileDialog dialogP = new OpenFileDialog();
             dialogP.Title = "Select file";
@@ -185,10 +156,18 @@ namespace RDinterface
             if (dialogP.ShowDialog() == true)
             {
                 lblBinP.Content = dialogP.FileName;
+                try
+                {
+                    using (StreamReader srP = new StreamReader(dialogP.FileName))
+                    {
+                        string line = await srP.ReadToEndAsync();
+                    }
+                }
+                catch (FileNotFoundException) { tbAlarmLog.Text += "BinP File not Found"; }
             }
         }
 
-        private void btnBinM1_Click(object sender, RoutedEventArgs e)
+        private async void btnBinM1_Click(object sender, RoutedEventArgs e)
         {
             OpenFileDialog dialogM1 = new OpenFileDialog();
             dialogM1.Title = "Select file";
@@ -196,10 +175,18 @@ namespace RDinterface
             if (dialogM1.ShowDialog() == true)
             {
                 lblBinM1.Content = dialogM1.FileName;
+                try
+                {
+                    using (StreamReader srM1 = new StreamReader(dialogM1.FileName))
+                    {
+                        string line = await srM1.ReadToEndAsync();
+                    }
+                }
+                catch (FileNotFoundException) { tbAlarmLog.Text += "BinM1 File not Found"; }
             }
         }
 
-        private void btnBinM2_Click(object sender, RoutedEventArgs e)
+        private async void btnBinM2_Click(object sender, RoutedEventArgs e)
         {
             OpenFileDialog dialogM2 = new OpenFileDialog();
             dialogM2.Title = "Select file";
@@ -207,7 +194,33 @@ namespace RDinterface
             if (dialogM2.ShowDialog() == true)
             {
                 lblBinM2.Content = dialogM2.FileName;
+                try
+                {
+                    using (StreamReader srM2 = new StreamReader(dialogM2.FileName))
+                    {
+                        string line = await srM2.ReadToEndAsync();
+                    }
+                }
+                catch (FileNotFoundException) { tbAlarmLog.Text += "BinM2 File not Found"; }
             }
+        }
+
+        private void btnBootLoad_Click(object sender, RoutedEventArgs e)
+        {
+            TPCANStatus stsResult;
+            string[] rawDatas = new string[4];
+            var dataGrid = new RawDataFormat();
+
+            GridFW.IsEnabled = false;
+
+            stsResult = baseCommand.Session_ExDiagnotic(m_PcanHandle, ref rawDatas);
+
+            stsResult = baseCommand.Config_PCU_Resp_1(m_PcanHandle);
+            Thread.Sleep(1000);
+            stsResult = baseCommand.Config_PCU_Resp_2(m_PcanHandle);
+            Thread.Sleep(1000);
+            stsResult = baseCommand.Config_PCU_Resp_3(m_PcanHandle);
+            Thread.Sleep(1000);
         }
 
         //SET BAUD RATE WHEN USER CHANGE THE SELECTION
@@ -260,65 +273,6 @@ namespace RDinterface
             }
         }
 
-        public static int GetLengthFromDLC(int dlc, bool isSTD)
-        {
-            if (dlc <= 8)
-                return dlc;
-
-            if (isSTD)
-                return 8;
-
-            switch (dlc)
-            {
-                case 9: return 12;
-                case 10: return 16;
-                case 11: return 20;
-                case 12: return 24;
-                case 13: return 32;
-                case 14: return 48;
-                case 15: return 64;
-                default: return dlc;
-            }
-        }
-
-        //private TPCANStatus WriteFrame(TPCANMsg writeData)
-        //{
-        //    ////CREATE MESSAGE STRUCTURE
-        //    //TPCANMsg CANMsg = new TPCANMsg();
-        //    //CANMsg.DATA = new byte[8];
-
-        //    ////CONFIGURATE THE MESSAGE
-        //    //CANMsg.ID = Convert.ToUInt32("300", 16);
-        //    //CANMsg.LEN = Convert.ToByte(8);
-        //    //CANMsg.MSGTYPE = TPCANMessageType.PCAN_MESSAGE_STANDARD;
-
-        //    ////GET TRANSMIT DATA MESSAGE
-        //    //for (int i = 0; i < GetLengthFromDLC(CANMsg.LEN, true); i++)
-        //    //{
-        //    //    CANMsg.DATA[i] = Convert.ToByte(writeData[i], 16);
-        //    //}
-
-        //    //return PCANBasic.Write(m_PcanHandle, ref writeData);
-        //}
-
-        private TPCANStatus ReadMessage(ref string[] DataInfo)
-        {
-            TPCANMsg CANMsg;
-            TPCANTimestamp CANTimeStamp;
-            TPCANStatus stsResult;
-            string[] rawDatas = new string[4];
-
-            stsResult = PCANBasic.Read(m_PcanHandle, out CANMsg, out CANTimeStamp);
-            if (stsResult == TPCANStatus.PCAN_ERROR_OK)
-            {
-                DataInfo[0] = DateTime.Now.TimeOfDay.ToString();
-                DataInfo[1] = "test";
-                DataInfo[2] = CANMsg.DATA.Length.ToString();
-                DataInfo[3] = BitConverter.ToString(CANMsg.DATA).Replace("-", " ");
-            }
-            return stsResult;
-        }
-
         // CHECK AVAILABLE DEVICES
         private void CheckDevice()
         {
@@ -340,7 +294,7 @@ namespace RDinterface
                             case 0x41:
                             case 0x42:
                             case 0x43:
-                                cbDevice.Items.Add($"PCAN-PCI({iDeviceID.ToString()}h)");
+                                cbDevice.Items.Add($"PCAN-PCI ({iDeviceID.ToString()}h)");
                                 break;
 
                             case 0x51:
@@ -348,7 +302,7 @@ namespace RDinterface
                             case 0x53:
                             case 0x54:
                             case 0x55:
-                                cbDevice.Items.Add($"PCAN-USB{iDeviceID.ToString()}h)");
+                                cbDevice.Items.Add($"PCAN-USB ({iDeviceID.ToString()}h)");
                                 break;
 
                             case 0x801:
@@ -356,12 +310,18 @@ namespace RDinterface
                             case 0x803:
                             case 0x804:
                             case 0x805:
-                                cbDevice.Items.Add($"PCAN-LAN{iDeviceID.ToString()}h)");
+                                cbDevice.Items.Add($"PCAN-LAN ({iDeviceID.ToString()}h)");
                                 break;
                         }
                     }
                 }
             }
+        }
+
+        public void UpdateRawData(string[] rawData)
+        {
+            var dataGrid = new RawDataFormat { RawTime = rawData[0], RawID = rawData[1], RawLength = rawData[2], RawData = rawData[3] };
+            dgRawData.Items.Add(dataGrid);
         }
     }
 }

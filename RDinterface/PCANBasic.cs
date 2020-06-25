@@ -1,22 +1,4 @@
-﻿//  PCANBasic.cs
-//
-//  ~~~~~~~~~~~~
-//
-//  PCAN-Basic API
-//
-//  ~~~~~~~~~~~~
-//
-//  ------------------------------------------------------------------
-//  Author : Keneth Wagner
-//	Last change: 28.10.2019 Wagner
-//
-//  Language: C# 1.0
-//  ------------------------------------------------------------------
-//
-//  Copyright (C) 1999-2019  PEAK-System Technik GmbH, Darmstadt
-//  more Info at http://www.peak-system.com 
-//
-using System;
+﻿using System;
 using System.Text;
 using System.Runtime.InteropServices;
 

@@ -47,11 +47,10 @@
                         <Button x:Name="btnConnect" Content="Connect" Height="30" Width="80" Margin="750,-350,0,0" Click="btnConnect_Click"/>
                         <Button x:Name="btnRelease" Content="Release" Height="30" Width="80" Margin="750,-250,0,0" Click="btnRelease_Click"/>
                         <Button x:Name="btnWriteTest" Content="Write" Height="50" Width="50" Margin="0,200,0,0" Click="btnWriteTest_Click"/>
-                        <Button x:Name="btnReadTest" Content="Read" Height="50" Width="50" Margin="500,200,0,0" Click="btnReadTest_Click"/>
                     </Grid>
                 </TabItem>
                 <TabItem Header="FW Update" Visibility="Collapsed">
-                    <Grid>
+                    <Grid x:Name="GridFW">
                         <Grid>
                             <CheckBox x:Name="cbBinA" Height="30" Width="30" Margin="42,30,820,361">
                                 <CheckBox.LayoutTransform>
@@ -64,7 +63,7 @@
                                 <Image Source="icon\folder.png"/>
                             </Button>
                         </Grid>
-                        <Grid>
+                        <Grid IsEnabled="False">
                             <CheckBox x:Name="cbBinS" Height="30" Width="30" Margin="42,80,820,311">
                                 <CheckBox.LayoutTransform>
                                     <ScaleTransform ScaleX="2" ScaleY="2"/>
@@ -76,7 +75,7 @@
                                 <Image Source="icon\folder.png"/>
                             </Button>
                         </Grid>
-                        <Grid>
+                        <Grid IsEnabled="False">
                             <CheckBox x:Name="cbBinP" Height="30" Width="30" Margin="42,130,820,261">
                                 <CheckBox.LayoutTransform>
                                     <ScaleTransform ScaleX="2" ScaleY="2"/>
@@ -88,7 +87,7 @@
                                 <Image Source="icon\folder.png"/>
                             </Button>
                         </Grid>
-                        <Grid>
+                        <Grid IsEnabled="False">
                             <CheckBox x:Name="cbBinM1" Height="30" Width="30" Margin="42,180,820,211">
                                 <CheckBox.LayoutTransform>
                                     <ScaleTransform ScaleX="2" ScaleY="2"/>
@@ -100,7 +99,7 @@
                                 <Image Source="icon\folder.png"/>
                             </Button>
                         </Grid>
-                        <Grid>
+                        <Grid IsEnabled="False">
                             <CheckBox x:Name="cbBinM2" Height="30" Width="30" Margin="42,230,820,161">
                                 <CheckBox.LayoutTransform>
                                     <ScaleTransform ScaleX="2" ScaleY="2"/>
@@ -113,7 +112,7 @@
                             </Button>
                         </Grid>
                         <ProgressBar x:Name="pbLoadScale" Height="40" Width="700" Margin="34,342,158,39" BorderBrush="Black" BorderThickness="2"/>
-                        <Button x:Name="btnBootLoad" Content="BootLoad" BorderBrush="Black" BorderThickness="2" Height="40" Width="100" FontSize="18" Margin="764,340,28,41"/>
+                        <Button x:Name="btnBootLoad" Content="BootLoad" BorderBrush="Black" BorderThickness="2" Height="40" Width="100" FontSize="18" Margin="764,340,28,41" Click="btnBootLoad_Click"/>
                     </Grid>
                 </TabItem>
                 <TabItem Header="Param Config" Visibility="Collapsed"/>
