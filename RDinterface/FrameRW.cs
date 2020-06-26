@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using Peak.Can.Basic;
 using TPCANHandle = System.UInt16;
 
@@ -32,6 +33,8 @@ namespace RDinterface
             TPCANMsg CANMsg;
             TPCANTimestamp CANTimeStamp;
             TPCANStatus stsResult;
+
+            Thread.Sleep(10);   //WAIT 10 MILLISECOND
 
             stsResult = PCANBasic.Read(CanHandle, out CANMsg, out CANTimeStamp);
             if (stsResult == TPCANStatus.PCAN_ERROR_OK)

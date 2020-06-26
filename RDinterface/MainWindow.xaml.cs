@@ -4,7 +4,6 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -25,6 +24,7 @@ namespace RDinterface
     /// </summary>
     public partial class MainWindow : Window
     {
+        string[] DatabyteA;
         BaseCommand baseCommand = new BaseCommand();
         private TPCANHandle m_PcanHandle;   //DEVICE HANDLE
         private TPCANBaudrate m_Baudrate = TPCANBaudrate.PCAN_BAUD_500K;   //TRANSMIT BAUD RATE
@@ -81,6 +81,7 @@ namespace RDinterface
             //CLEAR HMI RAW DATA GRID
             dgRawData.Items.Refresh();
             dgRawData.Items.Clear();
+
             tbAlarmLog.Text = "";   //CLEAR HMI ALARM LOG
         }
 
@@ -93,7 +94,7 @@ namespace RDinterface
 
             if (stsResult == TPCANStatus.PCAN_ERROR_OK)
             {
-                UpdateRawData(rawDatas);
+                UpdateGUI(rawDatas);
             }
             else
                 tbAlarmLog.Text += stsResult.ToString() + "\r\n"; //SHOW ERROR
@@ -121,8 +122,7 @@ namespace RDinterface
                     {
                         string line = await srA.ReadToEndAsync();
                         line = line.Replace("\r\n", " ").Replace("  ", " ");
-                        string[] Databyte = line.Split(" ");
-                        //tbAlarmLog.Text += Databyte.Length;
+                        DatabyteA = line.Split(" ");
                     }
                 }
                 catch (FileNotFoundException) { tbAlarmLog.Text += "BinA File not Found"; }
@@ -209,18 +209,35 @@ namespace RDinterface
         {
             TPCANStatus stsResult;
             string[] rawDatas = new string[4];
-            var dataGrid = new RawDataFormat();
 
             GridFW.IsEnabled = false;
 
-            stsResult = baseCommand.Session_ExDiagnotic(m_PcanHandle, ref rawDatas);
+            //stsResult = baseCommand.Session_ExDiagnotic(m_PcanHandle, ref rawDatas);
+            //UpdateGUI(rawDatas);
 
-            stsResult = baseCommand.Config_PCU_Resp_1(m_PcanHandle);
-            Thread.Sleep(1000);
-            stsResult = baseCommand.Config_PCU_Resp_2(m_PcanHandle);
-            Thread.Sleep(1000);
-            stsResult = baseCommand.Config_PCU_Resp_3(m_PcanHandle);
-            Thread.Sleep(1000);
+            //stsResult = baseCommand.Config_PCU_Resp_1(m_PcanHandle);
+            //Thread.Sleep(1000);
+            //stsResult = baseCommand.Config_PCU_Resp_2(m_PcanHandle);
+            //Thread.Sleep(1000);
+            //stsResult = baseCommand.Config_PCU_Resp_3(m_PcanHandle);
+            //Thread.Sleep(1000);
+
+            stsResult = baseCommand.Session_Program(m_PcanHandle, ref rawDatas);
+            UpdateGUI(rawDatas);
+
+            stsResult = baseCommand.Download_Request_1(m_PcanHandle, ref rawDatas);
+            UpdateGUI(rawDatas);
+
+            stsResult = baseCommand.Download_Request_2(m_PcanHandle, ref rawDatas);
+            UpdateGUI(rawDatas);
+            string[] temp = rawDatas[3].Split(" ");
+
+            if (cbBinA.IsChecked == true && DatabyteA.Length > 0)
+            {
+                stsResult = baseCommand.BinTransmit(m_PcanHandle, temp[3] + temp[4], DatabyteA);
+            }
+
+            GridFW.IsEnabled = true;
         }
 
         //SET BAUD RATE WHEN USER CHANGE THE SELECTION
@@ -318,10 +335,13 @@ namespace RDinterface
             }
         }
 
-        public void UpdateRawData(string[] rawData)
+        private void UpdateGUI(string[] rawData)
         {
-            var dataGrid = new RawDataFormat { RawTime = rawData[0], RawID = rawData[1], RawLength = rawData[2], RawData = rawData[3] };
-            dgRawData.Items.Add(dataGrid);
+            if (rawData.All(rawData => rawData != null) && rawData.All(rawData => rawData!=""))
+            {
+                var dataGrid = new RawDataFormat { RawTime = rawData[0], RawID = rawData[1], RawLength = rawData[2], RawData = rawData[3] };
+                dgRawData.Items.Add(dataGrid);
+            }
         }
     }
 }
