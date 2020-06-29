@@ -2,17 +2,9 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 using Microsoft.Win32;
 using Peak.Can.Basic;   //INCLUDE PCAN API
 using TPCANHandle = System.UInt16;
@@ -87,17 +79,17 @@ namespace RDinterface
 
         private void btnWriteTest_Click(object sender, RoutedEventArgs e)
         {
-            TPCANStatus stsResult;
-            string[] rawDatas = new string[4];
+            //TPCANStatus stsResult;
+            //string[] rawDatas = new string[4];
 
-            stsResult = baseCommand.Session_ExDiagnotic(m_PcanHandle, ref rawDatas);
+            //stsResult = baseCommand.Session_ExDiagnotic(m_PcanHandle, ref rawDatas);
 
-            if (stsResult == TPCANStatus.PCAN_ERROR_OK)
-            {
-                UpdateGUI(rawDatas);
-            }
-            else
-                tbAlarmLog.Text += stsResult.ToString() + "\r\n"; //SHOW ERROR
+            //if (stsResult == TPCANStatus.PCAN_ERROR_OK)
+            //{
+            //    //UpdateGUI(rawDatas);
+            //}
+            //else
+            //    tbAlarmLog.Text += stsResult.ToString() + "\r\n"; //SHOW ERROR
         }
 
         private void btnRefresh_Click(object sender, RoutedEventArgs e)
@@ -208,34 +200,64 @@ namespace RDinterface
         private void btnBootLoad_Click(object sender, RoutedEventArgs e)
         {
             TPCANStatus stsResult;
-            string[] rawDatas = new string[4];
+            //string[] rawDatas = new string[4];
+            List<string[]> rawDatas = new List<string[]>();
 
             GridFW.IsEnabled = false;
 
-            //stsResult = baseCommand.Session_ExDiagnotic(m_PcanHandle, ref rawDatas);
-            //UpdateGUI(rawDatas);
+            stsResult = baseCommand.Session_ExDiagnotic(m_PcanHandle, ref rawDatas);
+            UpdateGUI(rawDatas);
+            rawDatas.Clear();
 
-            //stsResult = baseCommand.Config_PCU_Resp_1(m_PcanHandle);
-            //Thread.Sleep(1000);
-            //stsResult = baseCommand.Config_PCU_Resp_2(m_PcanHandle);
-            //Thread.Sleep(1000);
-            //stsResult = baseCommand.Config_PCU_Resp_3(m_PcanHandle);
-            //Thread.Sleep(1000);
+            stsResult = baseCommand.Config_PCU_Resp_1(m_PcanHandle, ref rawDatas);
+            Thread.Sleep(1000);
+            stsResult = baseCommand.Config_PCU_Resp_2(m_PcanHandle, ref rawDatas);
+            Thread.Sleep(1000);
+            stsResult = baseCommand.Config_PCU_Resp_3(m_PcanHandle, ref rawDatas);
+            Thread.Sleep(1000);
+            UpdateGUI(rawDatas);
+            rawDatas.Clear();
 
             stsResult = baseCommand.Session_Program(m_PcanHandle, ref rawDatas);
             UpdateGUI(rawDatas);
+            rawDatas.Clear();
 
             stsResult = baseCommand.Download_Request_1(m_PcanHandle, ref rawDatas);
             UpdateGUI(rawDatas);
+            rawDatas.Clear();
 
             stsResult = baseCommand.Download_Request_2(m_PcanHandle, ref rawDatas);
+            string[] temp = rawDatas[1][3].Split(" ");
             UpdateGUI(rawDatas);
-            string[] temp = rawDatas[3].Split(" ");
+            rawDatas.Clear();
 
             if (cbBinA.IsChecked == true && DatabyteA.Length > 0)
             {
-                stsResult = baseCommand.BinTransmit(m_PcanHandle, temp[3] + temp[4], DatabyteA);
+                stsResult = baseCommand.BinTransmit(m_PcanHandle, temp[3] + temp[4], DatabyteA, ref rawDatas);
+                UpdateGUI(rawDatas);
+                rawDatas.Clear();
             }
+
+            stsResult = baseCommand.Transfer_End(m_PcanHandle, ref rawDatas);
+            UpdateGUI(rawDatas);
+            rawDatas.Clear();
+
+            stsResult = baseCommand.PCU_Reset(m_PcanHandle, ref rawDatas);
+            UpdateGUI(rawDatas);
+            rawDatas.Clear();
+
+            stsResult = baseCommand.Session_ExDiagnotic(m_PcanHandle, ref rawDatas);
+            UpdateGUI(rawDatas);
+            rawDatas.Clear();
+
+            stsResult = baseCommand.Config_PCU_Resp_4(m_PcanHandle, ref rawDatas);
+            Thread.Sleep(1000);
+            stsResult = baseCommand.Config_PCU_Resp_5(m_PcanHandle, ref rawDatas);
+            Thread.Sleep(1000);
+            stsResult = baseCommand.Config_PCU_Resp_6(m_PcanHandle, ref rawDatas);
+            Thread.Sleep(1000);
+            UpdateGUI(rawDatas);
+            rawDatas.Clear();
 
             GridFW.IsEnabled = true;
         }
@@ -335,12 +357,14 @@ namespace RDinterface
             }
         }
 
-        private void UpdateGUI(string[] rawData)
+        private void UpdateGUI(List<string[]> rawData)
         {
-            if (rawData.All(rawData => rawData != null) && rawData.All(rawData => rawData!=""))
+            foreach(string[] data in rawData)
+            if (data.All(data => data != null) && data.All(data => data != ""))
             {
-                var dataGrid = new RawDataFormat { RawTime = rawData[0], RawID = rawData[1], RawLength = rawData[2], RawData = rawData[3] };
+                var dataGrid = new RawDataFormat { RawTime = data[0], RawID = data[1], RawLength = data[2], RawData = data[3] };
                 dgRawData.Items.Add(dataGrid);
+
             }
         }
     }
