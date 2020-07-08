@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using Peak.Can.Basic;
 using TPCANHandle = System.UInt16;
 
@@ -13,33 +11,33 @@ namespace RDinterface
 
         public string Tx_ID_Config = "30F";
 
-        public string[] cmdFstFrame = new string[] { "1n", "nn", "36", "00", "00", "00", "00","00" };
+        public byte[] cmdFstFrame = new byte[] { 16, 0, 54, 0, 0, 0, 0, 0 };
 
-        public string[] cmdConseqFrame = new string[] { "2n", "00", "00", "00", "00", "00", "00", "00" };
+        public byte[] cmdConseqFrame = new byte[] { 32, 0, 0, 0, 0, 0, 0, 0 };
 
-        public string[] cmdDiagnostic = new string[] { "02", "10", "03", "00", "00", "00", "00", "00" };
+        public byte[] cmdDiagnostic = new byte[] { 2, 16, 3, 0, 0, 0, 0, 0 };
 
-        public string[] cmdConfigPCU1 = new string[] { "02", "10", "83", "00", "00", "00", "00", "00" };
+        public byte[] cmdConfigPCU1 = new byte[] { 2, 16, 131, 0, 0, 0, 0, 0 };
 
-        public string[] cmdConfigPCU2 = new string[] { "02", "85", "82", "00", "00", "00", "00", "00" };
+        public byte[] cmdConfigPCU2 = new byte[] { 2, 133, 130, 0, 0, 0, 0, 0 };
 
-        public string[] cmdConfigPCU3 = new string[] { "03", "28", "82", "03", "00", "00", "00", "00" };
+        public byte[] cmdConfigPCU3 = new byte[] { 3, 40, 130, 3, 0, 0, 0, 0 };
 
-        public string[] cmdConfigPCU4 = new string[] { "03", "28", "80", "03", "00", "00", "00", "00" };
+        public byte[] cmdConfigPCU4 = new byte[] { 3, 40,128, 3, 0, 0, 0, 0 };
 
-        public string[] cmdConfigPCU5 = new string[] { "02", "85", "81", "00", "00", "00", "00", "00" };
+        public byte[] cmdConfigPCU5 = new byte[] { 2, 133, 129, 0, 0, 0, 0, 0 };
 
-        public string[] cmdConfigPCU6 = new string[] { "02", "10", "81", "00", "00", "00", "00", "00" };
+        public byte[] cmdConfigPCU6 = new byte[] { 2, 16, 129, 0, 0, 0, 0, 0 };
 
-        public string[] cmdProgramming = new string[] { "02", "10", "02", "00", "00", "00", "00", "00" };
+        public byte[] cmdProgramming = new byte[] { 2, 16, 2, 0, 0, 0, 0, 0 };
 
-        public string[] cmdDownloadReq1 = new string[] { "10", "0B", "34", "00", "44", "00", "08", "00" };
+        public byte[] cmdDownloadReq1 = new byte[] { 16, 11, 52, 0, 68, 0, 8, 0 };
 
-        public string[] cmdDownloadReq2 = new string[] { "21", "00", "00", "20", "00", "00", "00", "00" };
+        public byte[] cmdDownloadReq2 = new byte[] { 33, 0, 0, 0, 0, 0, 0, 0 };
 
-        public string[] cmdTransferEnd = new string[] { "05", "37", "98", "F4", "CC", "33", "00", "00" };
+        public byte[] cmdTransferEnd = new byte[] { 5, 55, 152, 244, 204, 51, 0, 0 };
 
-        public string[] cmdPCUReset = new string[] { "02", "11", "01", "00", "00", "00", "00", "00" };
+        public byte[] cmdPCUReset = new byte[] { 2, 17, 1, 0, 0, 0, 0, 0 };
     
         public TPCANStatus Session_ExDiagnotic(TPCANHandle handle,ref List<string[]> DataInfo)
         {
@@ -106,10 +104,13 @@ namespace RDinterface
             return stsResult;
         }
 
-        public TPCANStatus Download_Request_2(TPCANHandle handle, ref List<string[]> DataInfo)
+        public TPCANStatus Download_Request_2(TPCANHandle handle, ref List<string[]> DataInfo, int binSize)
         {
             TPCANStatus stsResult;
             FrameRW frame = new FrameRW();
+
+            byte[] bSize = BitConverter.GetBytes(binSize);
+            Array.Copy(bSize, 0, cmdDownloadReq2, 8 - bSize.Length, bSize.Length);
 
             stsResult = frame.WriteFrame(handle, Tx_ID, cmdDownloadReq2, ref DataInfo);
             if (stsResult == TPCANStatus.PCAN_ERROR_OK)
@@ -177,15 +178,15 @@ namespace RDinterface
 
             return stsResult;
         }
-    
-        public TPCANStatus BinTransmit(TPCANHandle handle,string BlockSize,string[] BinData, ref List<string[]> DataInfo)
+
+        public TPCANStatus BinTransmit(TPCANHandle handle, string BlockSize, byte[] BinData, ref List<string[]> DataInfo)
         {
             TPCANStatus stsResult = 0;
             FrameRW frameRW = new FrameRW();
-            int FFdataSize = 5;
+            int FFdataSize = 4;
             int CFdataSize = 7;
-            List<string[]> BFrame = new List<string[]>();   //BLOCK DATA BUFFER
-            List<string[]> allFrame = new List<string[]>(); //FRAME DATA BUFFER
+            List<byte[]> BFrame = new List<byte[]>();   //BLOCK DATA BUFFER
+            List<byte[]> allFrame = new List<byte[]>(); //FRAME DATA BUFFER
             int blockSize = Convert.ToInt32(BlockSize, 16); //MAX SIZE OF A BLOCK
             int blockCount = BinData.Length / blockSize;    //NUMBER OF FULL BLOCK
             int LstBlockSize = BinData.Length % blockSize;  //LAST BLOCK DATA SIZE
@@ -193,72 +194,66 @@ namespace RDinterface
             //SPLIT BIN DATA BY BLOCK SIZE
             for (int i = 0; i < blockCount; i++)
             {
-                BFrame.Add(new string[blockSize]);
+                BFrame.Add(new byte[blockSize]);
                 Array.Copy(BinData, 0 + i * blockSize, BFrame[i], 0, blockSize);
             }
             if (LstBlockSize != 0)
             {
-                BFrame.Add(new string[LstBlockSize]);
+                BFrame.Add(new byte[LstBlockSize]);
                 Array.Copy(BinData, blockSize * blockCount, BFrame[blockCount], 0, LstBlockSize);
             }
 
             // SPLIT BLOCK DATA INTO FRAME
             for (int i = 0; i < BFrame.Count; i++)
             {
-                string curBlockSize = Convert.ToString(BFrame[i].Length,16);            //CURRENT BLOCK SIZE   
+                string curBlockSize = Convert.ToString(BFrame[i].Length, 16);            //CURRENT BLOCK SIZE   
                 int LstdataSize = (BFrame[i].Length - FFdataSize) % CFdataSize;         //LAST FRAME DATA SIZE
-                int frameCount = ((BFrame[i].Length - FFdataSize) / CFdataSize) + 2;    //TOTAL FRAME COUNT
                 string[] sftBlock = new string[BFrame[i].Length + 3];                   //BLOCK DATA BUFFER SHIFTING
 
-                //SHIFT BLOCK DATA OF FIRST THREE BYTES
-                for (int j = 0; j < sftBlock.Length; j++)
-                {
-                    if (j < 3)
-                        sftBlock[j] = "";
-                    else
-                        sftBlock[j] = BFrame[i][j - 3];
-                }
+                //CALCULATE AMOUNT OF FRAME
+                int frameCount = ((BFrame[i].Length - FFdataSize) / CFdataSize) + 1;
+                if (LstdataSize != 0)
+                    frameCount += 1;
 
-                for(int m = 0; m < frameCount; m++)
+                //FORMAT EACH FRAME
+                for (int m = 0; m < frameCount; m++)
                 {
-                    string frameIndex = Convert.ToString(m % 16, 16);
+                    int frameIndex = m % 16;
 
                     //FIRST FRAME
                     if (m == 0)
                     {
-                        allFrame.Add(new string[8] { "1n", "nn", "36", "00", "00", "00", "00", "00" });
-                        Array.Copy(sftBlock, 3, allFrame[allFrame.Count - 1], 3, 5);
+                        allFrame.Add(new byte[8] { 16, 0, 54, 0, 0, 0, 0, 0 });
 
-                        if (curBlockSize.Length > 2)
-                        {
-                            allFrame[allFrame.Count - 1][0] = allFrame[allFrame.Count - 1][0].Replace("n", curBlockSize.Substring(0, 1));
-                            allFrame[allFrame.Count - 1][1] = allFrame[allFrame.Count - 1][1].Replace("nn", curBlockSize.Substring(1, 2));
-                        }
-                        else
-                        {
-                            allFrame[allFrame.Count - 1][0] = allFrame[allFrame.Count - 1][0].Replace("n", "0");
-                            allFrame[allFrame.Count - 1][1] = allFrame[allFrame.Count - 1][1].Replace("nn", curBlockSize);
-                        }
+                        //ADD FIRST BLOCK DATA
+                        Array.Copy(BFrame[i], 0, allFrame[allFrame.Count - 1], 8 - FFdataSize, FFdataSize);
+
+                        //ADD BLOCK SIZE
+                        allFrame[allFrame.Count - 1][0] += (byte)((BFrame[i].Length >> 8) & 0xFF);
+                        allFrame[allFrame.Count - 1][1] = (byte)(BFrame[i].Length & 0xFF);
+
+                        //ADD BLOCK SEQUNCE COUNTER
+                        allFrame[allFrame.Count - 1][3] = (byte)(i + 1);
                     }
                     //LAST FRAME
                     else if (m == frameCount - 1)
                     {
-                        allFrame.Add(new string[8] { "2n", "00", "00", "00", "00", "00", "00", "00" });
-                        Array.Copy(sftBlock, 8 + (7 * (m - 1)), allFrame[allFrame.Count - 1], 1, LstdataSize);
-                        allFrame[allFrame.Count - 1][0] = allFrame[allFrame.Count - 1][0].Replace("n", frameIndex);
+                        allFrame.Add(new byte[8] { 32, 0, 0, 0, 0, 0, 0, 0 });
+                        Array.Copy(BFrame[i], FFdataSize + (CFdataSize * (m - 1)), allFrame[allFrame.Count - 1], 1, LstdataSize);
+                        allFrame[allFrame.Count - 1][0] += (byte)frameIndex;
                     }
                     //OTHER FRAME
                     else
                     {
-                        allFrame.Add(new string[8] { "2n", "00", "00", "00", "00", "00", "00", "00" });
-                        Array.Copy(sftBlock, 8 + (7 * (m - 1)), allFrame[allFrame.Count - 1], 1, 7);
-                        allFrame[allFrame.Count - 1][0] = allFrame[allFrame.Count - 1][0].Replace("n", frameIndex);
+                        allFrame.Add(new byte[8] { 32, 0, 0, 0, 0, 0, 0, 0 });
+                        Array.Copy(BFrame[i], FFdataSize + (CFdataSize * (m - 1)), allFrame[allFrame.Count - 1], 1, 7);
+                        allFrame[allFrame.Count - 1][0] += (byte)frameIndex;
                     }
                 }
             }
 
             //TRANSMIT BIN FILE DATA
-            foreach (string[] frame in allFrame)
+            foreach (byte[] frame in allFrame)
             {
                 stsResult = frameRW.WriteFrame(handle, Tx_ID, frame, ref DataInfo);
                 if (stsResult == TPCANStatus.PCAN_ERROR_OK)

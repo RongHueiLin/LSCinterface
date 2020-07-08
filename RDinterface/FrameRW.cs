@@ -8,7 +8,7 @@ namespace RDinterface
 {
     public class FrameRW
     {
-        public TPCANStatus WriteFrame(TPCANHandle CanHandle,string writeID, string[] writeData, ref List<string[]> DataInfo)
+        public TPCANStatus WriteFrame(TPCANHandle CanHandle,string writeID, byte[] writeData, ref List<string[]> DataInfo)
         {
             //CREATE MESSAGE STRUCTURE
             TPCANMsg CANMsg = new TPCANMsg();
@@ -23,13 +23,13 @@ namespace RDinterface
             //GET TRANSMIT DATA MESSAGE
             for (int i = 0; i < GetLengthFromDLC(CANMsg.LEN, true); i++)
             {
-                CANMsg.DATA[i] = Convert.ToByte(writeData[i], 16);
+                CANMsg.DATA[i] = writeData[i];
             }
 
             dataInfo[0] = DateTime.Now.TimeOfDay.ToString();
             dataInfo[1] = Convert.ToString(CANMsg.ID, 16);
             dataInfo[2] = CANMsg.DATA.Length.ToString();
-            dataInfo[3] = BitConverter.ToString(CANMsg.DATA).Replace("-", " ");
+            dataInfo[3] = BitConverter.ToString(CANMsg.DATA).Replace("-"," ");
             DataInfo.Add(dataInfo);
 
             return PCANBasic.Write(CanHandle, ref CANMsg);

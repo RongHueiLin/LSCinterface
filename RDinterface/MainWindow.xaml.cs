@@ -16,7 +16,8 @@ namespace RDinterface
     /// </summary>
     public partial class MainWindow : Window
     {
-        string[] DatabyteA;
+        //string[] DatabyteA;
+        byte[] DatabyteA;
         BaseCommand baseCommand = new BaseCommand();
         private TPCANHandle m_PcanHandle;   //DEVICE HANDLE
         private TPCANBaudrate m_Baudrate = TPCANBaudrate.PCAN_BAUD_500K;   //TRANSMIT BAUD RATE
@@ -100,7 +101,7 @@ namespace RDinterface
             CheckDevice();  //CHECK AVAILABLE DEVICES
         }
 
-        private async void btnBinA_Click(object sender, RoutedEventArgs e)
+        private void btnBinA_Click(object sender, RoutedEventArgs e)
         {
             OpenFileDialog dialogA = new OpenFileDialog();
             dialogA.Title = "Select file";
@@ -110,12 +111,17 @@ namespace RDinterface
                 lblBinA.Content = dialogA.FileName;
                 try
                 {
-                    using (StreamReader srA = new StreamReader(dialogA.FileName))
-                    {
-                        string line = await srA.ReadToEndAsync();
-                        line = line.Replace("\r\n", " ").Replace("  ", " ");
-                        DatabyteA = line.Split(" ");
-                    }
+                    FileStream fs = File.Open(dialogA.FileName, FileMode.Open);
+                    BinaryReader br = new BinaryReader(fs);
+
+                    DatabyteA = br.ReadBytes(Convert.ToInt32(fs.Length));
+
+                    //using (StreamReader srA = new StreamReader(dialogA.FileName))
+                    //{
+                    //    string line = await srA.ReadToEndAsync();
+                    //    line = line.Replace("\r\n", " ").Replace("  ", " ");
+                    //    //DatabyteA = line.Split(" ");
+                    //}
                 }
                 catch (FileNotFoundException) { tbAlarmLog.Text += "BinA File not Found"; }
             }
@@ -200,7 +206,6 @@ namespace RDinterface
         private void btnBootLoad_Click(object sender, RoutedEventArgs e)
         {
             TPCANStatus stsResult;
-            //string[] rawDatas = new string[4];
             List<string[]> rawDatas = new List<string[]>();
 
             GridFW.IsEnabled = false;
@@ -226,7 +231,7 @@ namespace RDinterface
             UpdateGUI(rawDatas);
             rawDatas.Clear();
 
-            stsResult = baseCommand.Download_Request_2(m_PcanHandle, ref rawDatas);
+            stsResult = baseCommand.Download_Request_2(m_PcanHandle, ref rawDatas, DatabyteA.Length);
             string[] temp = rawDatas[1][3].Split(" ");
             UpdateGUI(rawDatas);
             rawDatas.Clear();
