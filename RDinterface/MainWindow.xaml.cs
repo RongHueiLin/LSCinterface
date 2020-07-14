@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using Microsoft.Win32;
@@ -16,12 +16,12 @@ namespace RDinterface
     /// </summary>
     public partial class MainWindow : Window
     {
-        //string[] DatabyteA;
-        byte[] DatabyteA;
+        byte[] DatabyteA, DatabyteS, DatabyteP, DatabyteM1, DatabyteM2;
         BaseCommand baseCommand = new BaseCommand();
         private TPCANHandle m_PcanHandle;   //DEVICE HANDLE
         private TPCANBaudrate m_Baudrate = TPCANBaudrate.PCAN_BAUD_500K;   //TRANSMIT BAUD RATE
         private TPCANType m_HwType = TPCANType.PCAN_TYPE_ISA;   //HARDWARE TYPE
+        private List<string[]> rawDatas = new List<string[]>();
 
         //SCAN DEVICE LIST
         TPCANHandle[] m_NonPnPHandles = new TPCANHandle[]
@@ -115,19 +115,12 @@ namespace RDinterface
                     BinaryReader br = new BinaryReader(fs);
 
                     DatabyteA = br.ReadBytes(Convert.ToInt32(fs.Length));
-
-                    //using (StreamReader srA = new StreamReader(dialogA.FileName))
-                    //{
-                    //    string line = await srA.ReadToEndAsync();
-                    //    line = line.Replace("\r\n", " ").Replace("  ", " ");
-                    //    //DatabyteA = line.Split(" ");
-                    //}
                 }
                 catch (FileNotFoundException) { tbAlarmLog.Text += "BinA File not Found"; }
             }
         }
 
-        private async void btnBinS_Click(object sender, RoutedEventArgs e)
+        private void btnBinS_Click(object sender, RoutedEventArgs e)
         {
             OpenFileDialog dialogS = new OpenFileDialog();
             dialogS.Title = "Select file";
@@ -137,16 +130,16 @@ namespace RDinterface
                 lblBinS.Content = dialogS.FileName;
                 try
                 {
-                    using (StreamReader srS = new StreamReader(dialogS.FileName))
-                    {
-                        string line = await srS.ReadToEndAsync();
-                    }
+                    FileStream fs = File.Open(dialogS.FileName, FileMode.Open);
+                    BinaryReader br = new BinaryReader(fs);
+
+                    DatabyteS = br.ReadBytes(Convert.ToInt32(fs.Length));
                 }
                 catch (FileNotFoundException) { tbAlarmLog.Text += "BinS File not Found"; }
             }
         }
 
-        private async void btnBinP_Click(object sender, RoutedEventArgs e)
+        private void btnBinP_Click(object sender, RoutedEventArgs e)
         {
             OpenFileDialog dialogP = new OpenFileDialog();
             dialogP.Title = "Select file";
@@ -156,16 +149,16 @@ namespace RDinterface
                 lblBinP.Content = dialogP.FileName;
                 try
                 {
-                    using (StreamReader srP = new StreamReader(dialogP.FileName))
-                    {
-                        string line = await srP.ReadToEndAsync();
-                    }
+                    FileStream fs = File.Open(dialogP.FileName, FileMode.Open);
+                    BinaryReader br = new BinaryReader(fs);
+
+                    DatabyteP = br.ReadBytes(Convert.ToInt32(fs.Length));
                 }
                 catch (FileNotFoundException) { tbAlarmLog.Text += "BinP File not Found"; }
             }
         }
 
-        private async void btnBinM1_Click(object sender, RoutedEventArgs e)
+        private void btnBinM1_Click(object sender, RoutedEventArgs e)
         {
             OpenFileDialog dialogM1 = new OpenFileDialog();
             dialogM1.Title = "Select file";
@@ -175,16 +168,16 @@ namespace RDinterface
                 lblBinM1.Content = dialogM1.FileName;
                 try
                 {
-                    using (StreamReader srM1 = new StreamReader(dialogM1.FileName))
-                    {
-                        string line = await srM1.ReadToEndAsync();
-                    }
+                    FileStream fs = File.Open(dialogM1.FileName, FileMode.Open);
+                    BinaryReader br = new BinaryReader(fs);
+
+                    DatabyteM1 = br.ReadBytes(Convert.ToInt32(fs.Length));
                 }
                 catch (FileNotFoundException) { tbAlarmLog.Text += "BinM1 File not Found"; }
             }
         }
 
-        private async void btnBinM2_Click(object sender, RoutedEventArgs e)
+        private void btnBinM2_Click(object sender, RoutedEventArgs e)
         {
             OpenFileDialog dialogM2 = new OpenFileDialog();
             dialogM2.Title = "Select file";
@@ -194,10 +187,10 @@ namespace RDinterface
                 lblBinM2.Content = dialogM2.FileName;
                 try
                 {
-                    using (StreamReader srM2 = new StreamReader(dialogM2.FileName))
-                    {
-                        string line = await srM2.ReadToEndAsync();
-                    }
+                    FileStream fs = File.Open(dialogM2.FileName, FileMode.Open);
+                    BinaryReader br = new BinaryReader(fs);
+
+                    DatabyteM2 = br.ReadBytes(Convert.ToInt32(fs.Length));
                 }
                 catch (FileNotFoundException) { tbAlarmLog.Text += "BinM2 File not Found"; }
             }
@@ -206,63 +199,80 @@ namespace RDinterface
         private void btnBootLoad_Click(object sender, RoutedEventArgs e)
         {
             TPCANStatus stsResult;
-            List<string[]> rawDatas = new List<string[]>();
+            List<byte[]> BinSelect = new List<byte[]>();
+            //List<string[]> rawDatas = new List<string[]>();
 
             GridFW.IsEnabled = false;
 
-            stsResult = baseCommand.Session_ExDiagnotic(m_PcanHandle, ref rawDatas);
-            UpdateGUI(rawDatas);
-            rawDatas.Clear();
-
-            stsResult = baseCommand.Config_PCU_Resp_1(m_PcanHandle, ref rawDatas);
-            Thread.Sleep(1000);
-            stsResult = baseCommand.Config_PCU_Resp_2(m_PcanHandle, ref rawDatas);
-            Thread.Sleep(1000);
-            stsResult = baseCommand.Config_PCU_Resp_3(m_PcanHandle, ref rawDatas);
-            Thread.Sleep(1000);
-            UpdateGUI(rawDatas);
-            rawDatas.Clear();
-
-            stsResult = baseCommand.Session_Program(m_PcanHandle, ref rawDatas);
-            UpdateGUI(rawDatas);
-            rawDatas.Clear();
-
-            stsResult = baseCommand.Download_Request_1(m_PcanHandle, ref rawDatas);
-            UpdateGUI(rawDatas);
-            rawDatas.Clear();
-
-            stsResult = baseCommand.Download_Request_2(m_PcanHandle, ref rawDatas, DatabyteA.Length);
-            string[] temp = rawDatas[1][3].Split(" ");
-            UpdateGUI(rawDatas);
-            rawDatas.Clear();
-
             if (cbBinA.IsChecked == true && DatabyteA.Length > 0)
+                BinSelect.Add(DatabyteA);
+            if (cbBinS.IsChecked == true && DatabyteS.Length > 0)
+                BinSelect.Add(DatabyteS);
+            if (cbBinP.IsChecked == true && DatabyteP.Length > 0)
+                BinSelect.Add(DatabyteP);
+            if (cbBinM1.IsChecked == true && DatabyteM1.Length > 0)
+                BinSelect.Add(DatabyteM1);
+            if (cbBinM2.IsChecked == true && DatabyteM2.Length > 0)
+                BinSelect.Add(DatabyteM2);
+
+            foreach (var bin in BinSelect)
             {
-                stsResult = baseCommand.BinTransmit(m_PcanHandle, temp[3] + temp[4], DatabyteA, ref rawDatas);
-                UpdateGUI(rawDatas);
-                rawDatas.Clear();
+                stsResult = BinProcess(m_PcanHandle, bin);
             }
 
-            stsResult = baseCommand.Transfer_End(m_PcanHandle, ref rawDatas);
-            UpdateGUI(rawDatas);
-            rawDatas.Clear();
+            //stsResult = baseCommand.Session_ExDiagnotic(m_PcanHandle, ref rawDatas);
+            //await UpdateGUI(dgRawData, rawDatas);
+            //rawDatas.Clear();
 
-            stsResult = baseCommand.PCU_Reset(m_PcanHandle, ref rawDatas);
-            UpdateGUI(rawDatas);
-            rawDatas.Clear();
+            //stsResult = baseCommand.Config_PCU_Resp_1(m_PcanHandle, ref rawDatas);
+            //Thread.Sleep(1000);
+            //stsResult = baseCommand.Config_PCU_Resp_2(m_PcanHandle, ref rawDatas);
+            //Thread.Sleep(1000);
+            //stsResult = baseCommand.Config_PCU_Resp_3(m_PcanHandle, ref rawDatas);
+            //Thread.Sleep(1000);
+            //await UpdateGUI(dgRawData, rawDatas);
+            //rawDatas.Clear();
 
-            stsResult = baseCommand.Session_ExDiagnotic(m_PcanHandle, ref rawDatas);
-            UpdateGUI(rawDatas);
-            rawDatas.Clear();
+            //stsResult = baseCommand.Session_Program(m_PcanHandle, ref rawDatas);
+            //await UpdateGUI(dgRawData, rawDatas);
+            //rawDatas.Clear();
 
-            stsResult = baseCommand.Config_PCU_Resp_4(m_PcanHandle, ref rawDatas);
-            Thread.Sleep(1000);
-            stsResult = baseCommand.Config_PCU_Resp_5(m_PcanHandle, ref rawDatas);
-            Thread.Sleep(1000);
-            stsResult = baseCommand.Config_PCU_Resp_6(m_PcanHandle, ref rawDatas);
-            Thread.Sleep(1000);
-            UpdateGUI(rawDatas);
-            rawDatas.Clear();
+            //stsResult = baseCommand.Download_Request_1(m_PcanHandle, ref rawDatas);
+            //await UpdateGUI(dgRawData, rawDatas);
+            //rawDatas.Clear();
+
+            //stsResult = baseCommand.Download_Request_2(m_PcanHandle, ref rawDatas, DatabyteA.Length);
+            //string[] temp = rawDatas[1][3].Split(" ");
+            //await UpdateGUI(dgRawData, rawDatas);
+            //rawDatas.Clear();
+
+            //if (cbBinA.IsChecked == true && DatabyteA.Length > 0)
+            //{
+            //    stsResult = baseCommand.BinTransmit(m_PcanHandle, temp[3] + temp[4], DatabyteA, ref rawDatas);
+            //    await UpdateGUI(dgRawData, rawDatas);
+            //    rawDatas.Clear();
+            //}
+
+            //stsResult = baseCommand.Transfer_End(m_PcanHandle, ref rawDatas);
+            //await UpdateGUI(dgRawData, rawDatas);
+            //rawDatas.Clear();
+
+            //stsResult = baseCommand.PCU_Reset(m_PcanHandle, ref rawDatas);
+            //await UpdateGUI(dgRawData, rawDatas);
+            //rawDatas.Clear();
+
+            //stsResult = baseCommand.Session_ExDiagnotic(m_PcanHandle, ref rawDatas);
+            //await UpdateGUI(dgRawData, rawDatas);
+            //rawDatas.Clear();
+
+            //stsResult = baseCommand.Config_PCU_Resp_4(m_PcanHandle, ref rawDatas);
+            //Thread.Sleep(1000);
+            //stsResult = baseCommand.Config_PCU_Resp_5(m_PcanHandle, ref rawDatas);
+            //Thread.Sleep(1000);
+            //stsResult = baseCommand.Config_PCU_Resp_6(m_PcanHandle, ref rawDatas);
+            //Thread.Sleep(1000);
+            //await UpdateGUI(dgRawData, rawDatas);
+            //rawDatas.Clear();
 
             GridFW.IsEnabled = true;
         }
@@ -323,53 +333,122 @@ namespace RDinterface
             TPCANStatus stsResult;
             uint isChannelValid;
             UInt32 iDeviceID = 0;
-
-            foreach (var Device in m_NonPnPHandles)
+            try
             {
-                stsResult = PCANBasic.GetValue(Device, TPCANParameter.PCAN_CHANNEL_CONDITION, out isChannelValid, sizeof(uint));
-                if (stsResult == TPCANStatus.PCAN_ERROR_OK)
+                foreach (var Device in m_NonPnPHandles)
                 {
-                    if (isChannelValid == PCANBasic.PCAN_CHANNEL_AVAILABLE)
+
+                    stsResult = PCANBasic.GetValue(Device, TPCANParameter.PCAN_CHANNEL_CONDITION, out isChannelValid, sizeof(uint));
+                    if (stsResult == TPCANStatus.PCAN_ERROR_OK)
                     {
-                        stsResult = PCANBasic.GetValue(Device, TPCANParameter.PCAN_DEVICE_ID, out iDeviceID, sizeof(UInt32));
-
-                        switch (Device)
+                        if (isChannelValid == PCANBasic.PCAN_CHANNEL_AVAILABLE)
                         {
-                            case 0x41:
-                            case 0x42:
-                            case 0x43:
-                                cbDevice.Items.Add($"PCAN-PCI ({iDeviceID.ToString()}h)");
-                                break;
+                            stsResult = PCANBasic.GetValue(Device, TPCANParameter.PCAN_DEVICE_ID, out iDeviceID, sizeof(UInt32));
 
-                            case 0x51:
-                            case 0x52:
-                            case 0x53:
-                            case 0x54:
-                            case 0x55:
-                                cbDevice.Items.Add($"PCAN-USB ({iDeviceID.ToString()}h)");
-                                break;
+                            switch (Device)
+                            {
+                                case 0x41:
+                                case 0x42:
+                                case 0x43:
+                                    cbDevice.Items.Add($"PCAN-PCI ({iDeviceID.ToString()}h)");
+                                    break;
 
-                            case 0x801:
-                            case 0x802:
-                            case 0x803:
-                            case 0x804:
-                            case 0x805:
-                                cbDevice.Items.Add($"PCAN-LAN ({iDeviceID.ToString()}h)");
-                                break;
+                                case 0x51:
+                                case 0x52:
+                                case 0x53:
+                                case 0x54:
+                                case 0x55:
+                                    cbDevice.Items.Add($"PCAN-USB ({iDeviceID.ToString()}h)");
+                                    break;
+
+                                case 0x801:
+                                case 0x802:
+                                case 0x803:
+                                case 0x804:
+                                case 0x805:
+                                    cbDevice.Items.Add($"PCAN-LAN ({iDeviceID.ToString()}h)");
+                                    break;
+                            }
                         }
                     }
                 }
             }
+            catch (DllNotFoundException)
+            {
+                tbAlarmLog.Text += "PCANBasic.dll file Not Found.";
+            }
         }
 
-        private void UpdateGUI(List<string[]> rawData)
+        private TPCANStatus BinProcess(TPCANHandle handle,byte[] binData)
         {
-            foreach(string[] data in rawData)
-            if (data.All(data => data != null) && data.All(data => data != ""))
-            {
-                var dataGrid = new RawDataFormat { RawTime = data[0], RawID = data[1], RawLength = data[2], RawData = data[3] };
-                dgRawData.Items.Add(dataGrid);
+            TPCANStatus stsResult;
 
+            stsResult = baseCommand.Session_ExDiagnotic(m_PcanHandle, ref rawDatas);
+            UpdateGUI(dgRawData, rawDatas);
+            rawDatas.Clear();
+
+            stsResult = baseCommand.Config_PCU_Resp_1(m_PcanHandle, ref rawDatas);
+            Thread.Sleep(1000);
+            stsResult = baseCommand.Config_PCU_Resp_2(m_PcanHandle, ref rawDatas);
+            Thread.Sleep(1000);
+            stsResult = baseCommand.Config_PCU_Resp_3(m_PcanHandle, ref rawDatas);
+            Thread.Sleep(1000);
+            UpdateGUI(dgRawData, rawDatas);
+            rawDatas.Clear();
+
+            stsResult = baseCommand.Download_Request_1(m_PcanHandle, ref rawDatas);
+            UpdateGUI(dgRawData, rawDatas);
+            rawDatas.Clear();
+
+            stsResult = baseCommand.Download_Request_2(m_PcanHandle, ref rawDatas, binData.Length);
+            string[] temp = rawDatas[1][3].Split(" ");
+            UpdateGUI(dgRawData, rawDatas);
+            rawDatas.Clear();
+
+            stsResult = baseCommand.BinTransmit(m_PcanHandle, temp[3] + temp[4], binData, ref rawDatas);
+            UpdateGUI(dgRawData, rawDatas);
+            rawDatas.Clear();
+
+            stsResult = baseCommand.Transfer_End(m_PcanHandle, ref rawDatas);
+            UpdateGUI(dgRawData, rawDatas);
+            rawDatas.Clear();
+
+            stsResult = baseCommand.PCU_Reset(m_PcanHandle, ref rawDatas);
+            UpdateGUI(dgRawData, rawDatas);
+            rawDatas.Clear();
+
+            stsResult = baseCommand.Session_ExDiagnotic(m_PcanHandle, ref rawDatas);
+            UpdateGUI(dgRawData, rawDatas);
+            rawDatas.Clear();
+
+            stsResult = baseCommand.Config_PCU_Resp_4(m_PcanHandle, ref rawDatas);
+            Thread.Sleep(1000);
+            stsResult = baseCommand.Config_PCU_Resp_5(m_PcanHandle, ref rawDatas);
+            Thread.Sleep(1000);
+            stsResult = baseCommand.Config_PCU_Resp_6(m_PcanHandle, ref rawDatas);
+            Thread.Sleep(1000);
+            UpdateGUI(dgRawData, rawDatas);
+            rawDatas.Clear();
+
+            return stsResult;
+        }
+
+        private void UpdateGUI(DataGrid dataGrid, List<string[]> rawData)
+        //private async Task UpdateGUI(DataGrid dataGrid, List<string[]> rawData)
+        {
+            if (rawData.Count > 0)
+            {
+                foreach (string[] data in rawData)
+                {
+                    var tempData = new RawDataFormat { RawTime = data[0], RawID = data[1], RawLength = data[2], RawData = data[3] };
+
+                    dataGrid.Dispatcher.Invoke(() =>
+                    {
+                       dataGrid.Items.Add(tempData);
+                    }
+                    );
+                    //await Task.Delay(1);
+                }
             }
         }
     }

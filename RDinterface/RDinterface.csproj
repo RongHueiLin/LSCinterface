@@ -4,6 +4,12 @@
     <OutputType>WinExe</OutputType>
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <UseWPF>true</UseWPF>
+    <StartupObject></StartupObject>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <OutputPath>C:\builds\LSCinterface\</OutputPath>
   </PropertyGroup>
 
   <ItemGroup>
@@ -14,6 +20,12 @@
   <ItemGroup>
     <Resource Include="icon\Clear.png" />
     <Resource Include="icon\Folder.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="PCANBasic.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>
