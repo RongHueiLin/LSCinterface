@@ -31,13 +31,23 @@ namespace RDinterface
 
         public byte[] cmdProgramming = new byte[] { 2, 16, 2, 0, 0, 0, 0, 0 };
 
-        public byte[] cmdDownloadReq1 = new byte[] { 16, 11, 52, 0, 68, 0, 8, 0 };
+        public byte[] cmdDownloadReq1 = new byte[] { 16, 11, 52, 0, 68, 0, 0, 0 };
 
         public byte[] cmdDownloadReq2 = new byte[] { 33, 0, 0, 0, 0, 0, 0, 0 };
 
         public byte[] cmdTransferEnd = new byte[] { 5, 55, 152, 244, 204, 51, 0, 0 };
 
         public byte[] cmdPCUReset = new byte[] { 2, 17, 1, 0, 0, 0, 0, 0 };
+
+        public byte[] AddressBinA = new byte[] { 8, 4, 0, 0 };
+
+        public byte[] AddressBinS = new byte[] { 8, 0, 136, 0 };
+
+        public byte[] AddressBinP = new byte[] { 8, 0, 168, 0 };
+
+        public byte[] AddressBinM1 = new byte[] { 8, 0, 200, 0 };
+
+        public byte[] AddressBinM2 = new byte[] { 8, 1, 24, 0 };
     
         public TPCANStatus Session_ExDiagnotic(TPCANHandle handle,ref List<string[]> DataInfo)
         {
@@ -91,10 +101,15 @@ namespace RDinterface
             return stsResult;
         }
 
-        public TPCANStatus Download_Request_1(TPCANHandle handle, ref List<string[]> DataInfo)
+        public TPCANStatus Download_Request_1(TPCANHandle handle, string binTarget, ref List<string[]> DataInfo)
         {
             TPCANStatus stsResult;
+            byte[] address = new byte[4];
             FrameRW frame = new FrameRW();
+
+            address = GetAddress(binTarget);
+
+            Array.Copy(address, 0, cmdDownloadReq1, 5, 3);
 
             stsResult = frame.WriteFrame(handle, Tx_ID, cmdDownloadReq1, ref DataInfo);
             if (stsResult == TPCANStatus.PCAN_ERROR_OK)
@@ -104,13 +119,18 @@ namespace RDinterface
             return stsResult;
         }
 
-        public TPCANStatus Download_Request_2(TPCANHandle handle, ref List<string[]> DataInfo, int binSize)
+        public TPCANStatus Download_Request_2(TPCANHandle handle, string binTarget, ref List<string[]> DataInfo, int binSize)
         {
             TPCANStatus stsResult;
+            byte[] address = new byte[4];
             FrameRW frame = new FrameRW();
 
+            address = GetAddress(binTarget);
+
             byte[] bSize = BitConverter.GetBytes(binSize);
-            Array.Copy(bSize, 0, cmdDownloadReq2, 8 - bSize.Length, bSize.Length);
+            Array.Reverse(bSize);
+            Array.Copy(bSize, 0, cmdDownloadReq2, 2, bSize.Length);
+            Array.Copy(address, 3, cmdDownloadReq2, 1, 1);
 
             stsResult = frame.WriteFrame(handle, Tx_ID, cmdDownloadReq2, ref DataInfo);
             if (stsResult == TPCANStatus.PCAN_ERROR_OK)
@@ -263,6 +283,31 @@ namespace RDinterface
                 else return stsResult;
             }
             return stsResult;
+        }
+
+        private byte[] GetAddress(string binTarget)
+        {
+            byte[] address = new byte[4];
+
+            switch(binTarget)
+            {
+                case ("A"):
+                    address = AddressBinA;
+                    break;
+                case ("S"):
+                    address = AddressBinS;
+                    break;
+                case ("P"):
+                    address = AddressBinP;
+                    break;
+                case ("M1"):
+                    address = AddressBinM1;
+                    break;
+                case ("M2"):
+                    address = AddressBinM2;
+                    break;
+            }
+            return address;
         }
     }
 }

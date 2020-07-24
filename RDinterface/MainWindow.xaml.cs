@@ -199,25 +199,26 @@ namespace RDinterface
         private void btnBootLoad_Click(object sender, RoutedEventArgs e)
         {
             TPCANStatus stsResult;
-            List<byte[]> BinSelect = new List<byte[]>();
+            Dictionary<string,byte[]> BinSelect = new Dictionary<string, byte[]>();
             //List<string[]> rawDatas = new List<string[]>();
 
             GridFW.IsEnabled = false;
 
             if (cbBinA.IsChecked == true && DatabyteA.Length > 0)
-                BinSelect.Add(DatabyteA);
+                BinSelect.Add("A",DatabyteA);
             if (cbBinS.IsChecked == true && DatabyteS.Length > 0)
-                BinSelect.Add(DatabyteS);
+                BinSelect.Add("S",DatabyteS);
             if (cbBinP.IsChecked == true && DatabyteP.Length > 0)
-                BinSelect.Add(DatabyteP);
+                BinSelect.Add("P",DatabyteP);
             if (cbBinM1.IsChecked == true && DatabyteM1.Length > 0)
-                BinSelect.Add(DatabyteM1);
+                BinSelect.Add("M1",DatabyteM1);
             if (cbBinM2.IsChecked == true && DatabyteM2.Length > 0)
-                BinSelect.Add(DatabyteM2);
+                BinSelect.Add("M2",DatabyteM2);
 
             foreach (var bin in BinSelect)
             {
-                stsResult = BinProcess(m_PcanHandle, bin);
+
+                stsResult = BinProcess(m_PcanHandle, bin.Key, bin.Value);
             }
 
             //stsResult = baseCommand.Session_ExDiagnotic(m_PcanHandle, ref rawDatas);
@@ -379,7 +380,7 @@ namespace RDinterface
             }
         }
 
-        private TPCANStatus BinProcess(TPCANHandle handle,byte[] binData)
+        private TPCANStatus BinProcess(TPCANHandle handle, string binTarget, byte[] binData)
         {
             TPCANStatus stsResult;
 
@@ -396,11 +397,11 @@ namespace RDinterface
             UpdateGUI(dgRawData, rawDatas);
             rawDatas.Clear();
 
-            stsResult = baseCommand.Download_Request_1(m_PcanHandle, ref rawDatas);
+            stsResult = baseCommand.Download_Request_1(m_PcanHandle, binTarget, ref rawDatas);
             UpdateGUI(dgRawData, rawDatas);
             rawDatas.Clear();
 
-            stsResult = baseCommand.Download_Request_2(m_PcanHandle, ref rawDatas, binData.Length);
+            stsResult = baseCommand.Download_Request_2(m_PcanHandle, binTarget, ref rawDatas, binData.Length);
             string[] temp = rawDatas[1][3].Split(" ");
             UpdateGUI(dgRawData, rawDatas);
             rawDatas.Clear();
