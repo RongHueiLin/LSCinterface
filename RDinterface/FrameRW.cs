@@ -12,11 +12,11 @@ namespace RDinterface
     {
         public TPCANStatus CanStatus { get; }
 
-        public ReturnData ReturnData { get; }
+        public DataFormat ReturnData { get; }
 
         public FrameRW()
         {
-            ReturnData = new ReturnData();
+            ReturnData = new DataFormat();
         }
 
         public TPCANStatus WriteFrame(TPCANHandle CanHandle,string writeID, byte[] writeData)

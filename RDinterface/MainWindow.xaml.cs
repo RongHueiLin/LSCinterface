@@ -8,7 +8,7 @@ using System.Windows;
 using System.Windows.Controls;
 using Microsoft.Win32;
 using Peak.Can.Basic;   //INCLUDE PCAN API
-using TPCANHandle = System.UInt16;
+using TPCANHandle = System.UInt16;  //DEFINE HANDLE DATA TYPE
 
 namespace RDinterface
 {
@@ -18,11 +18,12 @@ namespace RDinterface
     public partial class MainWindow : Window
     {
         byte[] DatabyteA, DatabyteS, DatabyteP, DatabyteM1, DatabyteM2;
-        BaseCommand baseCommand = new BaseCommand();
         private TPCANHandle m_PcanHandle;   //DEVICE HANDLE
         private TPCANBaudrate m_Baudrate = TPCANBaudrate.PCAN_BAUD_500K;   //TRANSMIT BAUD RATE
         private TPCANType m_HwType = TPCANType.PCAN_TYPE_ISA;   //HARDWARE TYPE
-        private List<string[]> rawDatas = new List<string[]>();
+        //private List<string[]> rawDatas = new List<string[]>();
+        BaseCommand bc = new BaseCommand();
+        ObservableCollection<DataFormat> collection = new ObservableCollection<DataFormat>();
 
         //SCAN DEVICE LIST
         TPCANHandle[] m_NonPnPHandles = new TPCANHandle[]
@@ -42,37 +43,13 @@ namespace RDinterface
             PCANBasic.PCAN_LANBUS5,
         };
 
-        public class RawDataGrid
-        {
-            public string Time { get; set; }
-
-            public string ID { get; set; }
-
-            public string Length { get; set; }
-
-            public string Data { get; set; }
-        }
-
-        public ObservableCollection<ReturnData> Collection { get; set; }
-
-        public List<ReturnData> rawDataGrids { get; set; }
-
-        private void WindowLoad(object sender, RoutedEventArgs e)
-        {
-            this.rawDataGrids = new List<ReturnData>();
-
-            //foreach(var data in rawDataGrids)
-            //{
-            //    Collection.Add(data);
-            //}
-        }
-
         public MainWindow()
         {
-            Collection = new ObservableCollection<ReturnData>();
             InitializeComponent();
 
             CheckDevice();  //CHECK AVAILABLE DEVICES
+
+            dgRawData.ItemsSource = collection; //UI DATAGRID ITEMSOURCE BINDING
         }
 
         private void btnConnect_Click(object sender, RoutedEventArgs e)
@@ -99,25 +76,11 @@ namespace RDinterface
         private void btnClear_Click(object sender, RoutedEventArgs e)
         {
             //CLEAR HMI RAW DATA GRID
-            dgRawData.Items.Refresh();
-            dgRawData.Items.Clear();
+            collection.Clear();
+            //dgRawData.Items.Refresh();
+            //dgRawData.Items.Clear();
 
             tbAlarmLog.Text = "";   //CLEAR HMI ALARM LOG
-        }
-
-        private void btnWriteTest_Click(object sender, RoutedEventArgs e)
-        {
-            //TPCANStatus stsResult;
-            //string[] rawDatas = new string[4];
-
-            //stsResult = baseCommand.Session_ExDiagnotic(m_PcanHandle, ref rawDatas);
-
-            //if (stsResult == TPCANStatus.PCAN_ERROR_OK)
-            //{
-            //    //UpdateGUI(rawDatas);
-            //}
-            //else
-            //    tbAlarmLog.Text += stsResult.ToString() + "\r\n"; //SHOW ERROR
         }
 
         private void btnRefresh_Click(object sender, RoutedEventArgs e)
@@ -253,63 +216,10 @@ namespace RDinterface
                 }
             }
 
-            //stsResult = baseCommand.Session_ExDiagnotic(m_PcanHandle, ref rawDatas);
-            //await UpdateGUI(dgRawData, rawDatas);
-            //rawDatas.Clear();
-
-            //stsResult = baseCommand.Config_PCU_Resp_1(m_PcanHandle, ref rawDatas);
-            //Thread.Sleep(1000);
-            //stsResult = baseCommand.Config_PCU_Resp_2(m_PcanHandle, ref rawDatas);
-            //Thread.Sleep(1000);
-            //stsResult = baseCommand.Config_PCU_Resp_3(m_PcanHandle, ref rawDatas);
-            //Thread.Sleep(1000);
-            //await UpdateGUI(dgRawData, rawDatas);
-            //rawDatas.Clear();
-
-            //stsResult = baseCommand.Session_Program(m_PcanHandle, ref rawDatas);
-            //await UpdateGUI(dgRawData, rawDatas);
-            //rawDatas.Clear();
-
-            //stsResult = baseCommand.Download_Request_1(m_PcanHandle, ref rawDatas);
-            //await UpdateGUI(dgRawData, rawDatas);
-            //rawDatas.Clear();
-
-            //stsResult = baseCommand.Download_Request_2(m_PcanHandle, ref rawDatas, DatabyteA.Length);
-            //string[] temp = rawDatas[1][3].Split(" ");
-            //await UpdateGUI(dgRawData, rawDatas);
-            //rawDatas.Clear();
-
-            //if (cbBinA.IsChecked == true && DatabyteA.Length > 0)
-            //{
-            //    stsResult = baseCommand.BinTransmit(m_PcanHandle, temp[3] + temp[4], DatabyteA, ref rawDatas);
-            //    await UpdateGUI(dgRawData, rawDatas);
-            //    rawDatas.Clear();
-            //}
-
-            //stsResult = baseCommand.Transfer_End(m_PcanHandle, ref rawDatas);
-            //await UpdateGUI(dgRawData, rawDatas);
-            //rawDatas.Clear();
-
-            //stsResult = baseCommand.PCU_Reset(m_PcanHandle, ref rawDatas);
-            //await UpdateGUI(dgRawData, rawDatas);
-            //rawDatas.Clear();
-
-            //stsResult = baseCommand.Session_ExDiagnotic(m_PcanHandle, ref rawDatas);
-            //await UpdateGUI(dgRawData, rawDatas);
-            //rawDatas.Clear();
-
-            //stsResult = baseCommand.Config_PCU_Resp_4(m_PcanHandle, ref rawDatas);
-            //Thread.Sleep(1000);
-            //stsResult = baseCommand.Config_PCU_Resp_5(m_PcanHandle, ref rawDatas);
-            //Thread.Sleep(1000);
-            //stsResult = baseCommand.Config_PCU_Resp_6(m_PcanHandle, ref rawDatas);
-            //Thread.Sleep(1000);
-            //await UpdateGUI(dgRawData, rawDatas);
-            //rawDatas.Clear();
-
             GridFW.IsEnabled = true;
         }
 
+        //SET DELAY TIME BETWEEN FRAME W/R
         private void tbCmdTime_LostFocus(object sender, RoutedEventArgs e)
         {
             if (Convert.ToInt32(tbCmdTime.Text) < 0)
@@ -317,7 +227,7 @@ namespace RDinterface
             if (Convert.ToInt32(tbCmdTime.Text) > 99999)
                 tbCmdTime.Text = "99999";
 
-            baseCommand.DelayTime = tbCmdTime.Text;
+            bc.DelayTime = tbCmdTime.Text;
         }
 
         //SET BAUD RATE WHEN USER CHANGE THE SELECTION
@@ -425,31 +335,46 @@ namespace RDinterface
         private TPCANStatus BinProcess(TPCANHandle handle, string binTarget, byte[] binData)
         {
             TPCANStatus stsResult;
+            byte[] address = bc.GetAddress(binTarget);
             string[] temp = new string[8];
 
-            stsResult = baseCommand.Session_ExDiagnotic(m_PcanHandle);
-            //UpdateGUI(dgRawData, rawDatas);
-            //rawDatas.Clear();
+            //MODIFY DOWNLOAD_REQUEST_1 DATA
+            Array.Copy(address, 0, bc.cmdDownloadReq1, 5, 3);
 
-            stsResult = baseCommand.Config_PCU_Resp_1(m_PcanHandle);
-            Thread.Sleep(1000);
-            stsResult = baseCommand.Config_PCU_Resp_2(m_PcanHandle);
-            Thread.Sleep(1000);
-            stsResult = baseCommand.Config_PCU_Resp_3(m_PcanHandle);
-            Thread.Sleep(1000);
-            //UpdateGUI(dgRawData, rawDatas);
-            //rawDatas.Clear();
+            //MODIFY DOWNLOAD_REQUEST_2 DATA
+            byte[] bSize = BitConverter.GetBytes(binData.Length);
+            Array.Reverse(bSize);
+            Array.Copy(bSize, 0, bc.cmdDownloadReq2, 2, bSize.Length);
+            Array.Copy(address, 3, bc.cmdDownloadReq2, 1, 1);
 
-            stsResult = baseCommand.Download_Request_1(m_PcanHandle, binTarget);
-            //UpdateGUI(dgRawData, rawDatas);
-            //rawDatas.Clear();
+            stsResult = bc.TransmitNormal(m_PcanHandle,bc.Tx_ID,bc.cmdDiagnostic);
+            collection.Add(new DataFormat { Time = bc.Tx.Time,ID = bc.Tx.ID,Length = bc.Tx.Length,Data = bc.Tx.Data });
+            collection.Add(bc.Rx);
 
-            stsResult = baseCommand.Download_Request_2(m_PcanHandle, binTarget, binData.Length);
+            stsResult = bc.TransmitOnly(m_PcanHandle,bc.Tx_ID_Config,bc.cmdConfigPCU1);
+            collection.Add(new DataFormat { Time = bc.Tx.Time, ID = bc.Tx.ID, Length = bc.Tx.Length, Data = bc.Tx.Data });
+            Thread.Sleep(1000);
+            stsResult = bc.TransmitOnly(m_PcanHandle, bc.Tx_ID_Config, bc.cmdConfigPCU2);
+            collection.Add(new DataFormat { Time = bc.Tx.Time, ID = bc.Tx.ID, Length = bc.Tx.Length, Data = bc.Tx.Data });
+            Thread.Sleep(1000);
+            stsResult = bc.TransmitOnly(m_PcanHandle, bc.Tx_ID_Config, bc.cmdConfigPCU3);
+            collection.Add(new DataFormat { Time = bc.Tx.Time, ID = bc.Tx.ID, Length = bc.Tx.Length, Data = bc.Tx.Data });
+            Thread.Sleep(1000);
+
+            stsResult = bc.TransmitNormal(m_PcanHandle, bc.Tx_ID, bc.cmdProgramming);
+            collection.Add(new DataFormat { Time = bc.Tx.Time, ID = bc.Tx.ID, Length = bc.Tx.Length, Data = bc.Tx.Data });
+            collection.Add(bc.Rx);
+
+            stsResult = bc.TransmitNormal(m_PcanHandle, bc.Tx_ID, bc.cmdDownloadReq1);
+            collection.Add(new DataFormat { Time = bc.Tx.Time, ID = bc.Tx.ID, Length = bc.Tx.Length, Data = bc.Tx.Data });
+            collection.Add(bc.Rx);
+
+            stsResult = bc.TransmitNormal(m_PcanHandle, bc.Tx_ID, bc.cmdDownloadReq2);
+            collection.Add(new DataFormat { Time = bc.Tx.Time, ID = bc.Tx.ID, Length = bc.Tx.Length, Data = bc.Tx.Data });
             if (stsResult == TPCANStatus.PCAN_ERROR_OK)
             {
-                temp = baseCommand.BaseCmd.Data.Split(" ");
-                //UpdateGUI(dgRawData, rawDatas);
-                //rawDatas.Clear();
+                collection.Add(bc.Rx);
+                temp = bc.Rx.Data.Split(" ");
             }
             else
                 return stsResult;
@@ -458,32 +383,32 @@ namespace RDinterface
             //UpdateGUI(dgRawData, rawDatas);
             //rawDatas.Clear();
 
-            stsResult = baseCommand.Transfer_End(m_PcanHandle);
-            //UpdateGUI(dgRawData, rawDatas);
-            //rawDatas.Clear();
+            stsResult = bc.TransmitNormal(m_PcanHandle,bc.Tx_ID,bc.cmdTransferEnd);
+            collection.Add(new DataFormat { Time = bc.Tx.Time, ID = bc.Tx.ID, Length = bc.Tx.Length, Data = bc.Tx.Data });
+            collection.Add(bc.Rx);
 
-            stsResult = baseCommand.PCU_Reset(m_PcanHandle);
-            //UpdateGUI(dgRawData, rawDatas);
-            //rawDatas.Clear();
+            stsResult = bc.TransmitNormal(m_PcanHandle,bc.Tx_ID,bc.cmdPCUReset);
+            collection.Add(new DataFormat { Time = bc.Tx.Time, ID = bc.Tx.ID, Length = bc.Tx.Length, Data = bc.Tx.Data });
+            collection.Add(bc.Rx);
 
-            stsResult = baseCommand.Session_ExDiagnotic(m_PcanHandle);
-            //UpdateGUI(dgRawData, rawDatas);
-            //rawDatas.Clear();
+            stsResult = bc.TransmitNormal(m_PcanHandle, bc.Tx_ID, bc.cmdDiagnostic);
+            collection.Add(new DataFormat { Time = bc.Tx.Time, ID = bc.Tx.ID, Length = bc.Tx.Length, Data = bc.Tx.Data });
+            collection.Add(bc.Rx);
 
-            stsResult = baseCommand.Config_PCU_Resp_4(m_PcanHandle);
+            stsResult = bc.TransmitOnly(m_PcanHandle, bc.Tx_ID_Config, bc.cmdConfigPCU4);
+            collection.Add(new DataFormat { Time = bc.Tx.Time, ID = bc.Tx.ID, Length = bc.Tx.Length, Data = bc.Tx.Data });
             Thread.Sleep(1000);
-            stsResult = baseCommand.Config_PCU_Resp_5(m_PcanHandle);
+            stsResult = bc.TransmitOnly(m_PcanHandle, bc.Tx_ID_Config, bc.cmdConfigPCU5);
+            collection.Add(new DataFormat { Time = bc.Tx.Time, ID = bc.Tx.ID, Length = bc.Tx.Length, Data = bc.Tx.Data });
             Thread.Sleep(1000);
-            stsResult = baseCommand.Config_PCU_Resp_6(m_PcanHandle);
+            stsResult = bc.TransmitOnly(m_PcanHandle, bc.Tx_ID_Config, bc.cmdConfigPCU6);
+            collection.Add(new DataFormat { Time = bc.Tx.Time, ID = bc.Tx.ID, Length = bc.Tx.Length, Data = bc.Tx.Data });
             Thread.Sleep(1000);
-            //UpdateGUI(dgRawData, rawDatas);
-            //rawDatas.Clear();
 
             return stsResult;
         }
 
         private void UpdateGUI(DataGrid dataGrid, List<string[]> rawData)
-        //private async Task UpdateGUI(DataGrid dataGrid, List<string[]> rawData)
         {
             if (rawData.Count > 0)
             {
@@ -496,7 +421,6 @@ namespace RDinterface
                        dataGrid.Items.Add(tempData);
                     }
                     );
-                    //await Task.Delay(1);
                 }
             }
         }

@@ -9,49 +9,51 @@ namespace RDinterface
 {
     public class BaseCommand
     {
-        private string Tx_ID = "300";
+        public string Tx_ID = "300";
 
-        private string Tx_ID_Config = "30F";
+        public string Tx_ID_Config = "30F";
 
         private byte[] cmdFstFrame = new byte[] { 16, 0, 54, 0, 0, 0, 0, 0 };
 
         private byte[] cmdConseqFrame = new byte[] { 32, 0, 0, 0, 0, 0, 0, 0 };
 
-        private byte[] cmdDiagnostic = new byte[] { 2, 16, 3, 0, 0, 0, 0, 0 };
+        public byte[] cmdDiagnostic = new byte[] { 2, 16, 3, 0, 0, 0, 0, 0 };
 
-        private byte[] cmdConfigPCU1 = new byte[] { 2, 16, 131, 0, 0, 0, 0, 0 };
+        public byte[] cmdConfigPCU1 = new byte[] { 2, 16, 131, 0, 0, 0, 0, 0 };
 
-        private byte[] cmdConfigPCU2 = new byte[] { 2, 133, 130, 0, 0, 0, 0, 0 };
+        public byte[] cmdConfigPCU2 = new byte[] { 2, 133, 130, 0, 0, 0, 0, 0 };
 
-        private byte[] cmdConfigPCU3 = new byte[] { 3, 40, 130, 3, 0, 0, 0, 0 };
+        public byte[] cmdConfigPCU3 = new byte[] { 3, 40, 130, 3, 0, 0, 0, 0 };
 
-        private byte[] cmdConfigPCU4 = new byte[] { 3, 40,128, 3, 0, 0, 0, 0 };
+        public byte[] cmdConfigPCU4 = new byte[] { 3, 40,128, 3, 0, 0, 0, 0 };
 
-        private byte[] cmdConfigPCU5 = new byte[] { 2, 133, 129, 0, 0, 0, 0, 0 };
+        public byte[] cmdConfigPCU5 = new byte[] { 2, 133, 129, 0, 0, 0, 0, 0 };
 
-        private byte[] cmdConfigPCU6 = new byte[] { 2, 16, 129, 0, 0, 0, 0, 0 };
+        public byte[] cmdConfigPCU6 = new byte[] { 2, 16, 129, 0, 0, 0, 0, 0 };
 
-        private byte[] cmdProgramming = new byte[] { 2, 16, 2, 0, 0, 0, 0, 0 };
+        public byte[] cmdProgramming = new byte[] { 2, 16, 2, 0, 0, 0, 0, 0 };
 
-        private byte[] cmdDownloadReq1 = new byte[] { 16, 11, 52, 0, 68, 0, 0, 0 };
+        public byte[] cmdDownloadReq1 = new byte[] { 16, 11, 52, 0, 68, 0, 0, 0 };
 
-        private byte[] cmdDownloadReq2 = new byte[] { 33, 0, 0, 0, 0, 0, 0, 0 };
+        public byte[] cmdDownloadReq2 = new byte[] { 33, 0, 0, 0, 0, 0, 0, 0 };
 
-        private byte[] cmdTransferEnd = new byte[] { 5, 55, 152, 244, 204, 51, 0, 0 };
+        public byte[] cmdTransferEnd = new byte[] { 5, 55, 152, 244, 204, 51, 0, 0 };
 
-        private byte[] cmdPCUReset = new byte[] { 2, 17, 1, 0, 0, 0, 0, 0 };
+        public byte[] cmdPCUReset = new byte[] { 2, 17, 1, 0, 0, 0, 0, 0 };
 
-        private byte[] AddressBinA = new byte[] { 8, 4, 0, 0 };
+        public byte[] AddressBinA = new byte[] { 8, 4, 0, 0 };
 
-        private byte[] AddressBinS = new byte[] { 8, 0, 136, 0 };
+        public byte[] AddressBinS = new byte[] { 8, 0, 136, 0 };
 
-        private byte[] AddressBinP = new byte[] { 8, 0, 168, 0 };
+        public byte[] AddressBinP = new byte[] { 8, 0, 168, 0 };
 
-        private byte[] AddressBinM1 = new byte[] { 8, 0, 200, 0 };
+        public byte[] AddressBinM1 = new byte[] { 8, 0, 200, 0 };
 
-        private byte[] AddressBinM2 = new byte[] { 8, 1, 24, 0 };
+        public byte[] AddressBinM2 = new byte[] { 8, 1, 24, 0 };
 
-        public ReturnData BaseCmd { get; set; }
+        public DataFormat Tx { get; set; }
+
+        public DataFormat Rx { get; set; }
 
         private int _delayTime = 10;
 
@@ -59,15 +61,21 @@ namespace RDinterface
 
         public BaseCommand()
         {
-            BaseCmd = new ReturnData();
+            Tx = new DataFormat();
+            Rx = new DataFormat();
         }
 
-        public TPCANStatus Session_ExDiagnotic(TPCANHandle handle)
+        public TPCANStatus TransmitNormal(TPCANHandle handle, string id, byte[] command)
         {
             TPCANStatus stsResult;
             FrameRW frame = new FrameRW();
 
-            stsResult = frame.WriteFrame(handle, Tx_ID, cmdDiagnostic);
+            this.Tx.Time = DateTime.Now.TimeOfDay.ToString();
+            this.Tx.ID = id;
+            this.Tx.Length = command.Length.ToString();
+            this.Tx.Data = BitConverter.ToString(command).Replace("-", " ");
+
+            stsResult = frame.WriteFrame(handle, id, command);
 
             Thread.Sleep(_delayTime);
 
@@ -76,178 +84,212 @@ namespace RDinterface
                 stsResult = frame.ReadFrame(handle);
 
                 if (stsResult == TPCANStatus.PCAN_ERROR_OK)
-                    this.BaseCmd = frame.ReturnData;
+                    this.Rx = frame.ReturnData;
             }
             return stsResult;
         }
 
-        public TPCANStatus Session_Program(TPCANHandle handle)
+        public TPCANStatus TransmitOnly(TPCANHandle handle, string id, byte[] command)
         {
             TPCANStatus stsResult;
             FrameRW frame = new FrameRW();
 
-            stsResult = frame.WriteFrame(handle, Tx_ID, cmdProgramming);
+            this.Tx.Time = DateTime.Now.TimeOfDay.ToString();
+            this.Tx.ID = id;
+            this.Tx.Length = command.Length.ToString();
+            this.Tx.Data = BitConverter.ToString(command).Replace("-", " ");
 
-            Thread.Sleep(_delayTime);
-
-            if (stsResult == TPCANStatus.PCAN_ERROR_OK)
-            {
-                stsResult = frame.ReadFrame(handle);
-
-                if (stsResult == TPCANStatus.PCAN_ERROR_OK)
-                    this.BaseCmd = frame.ReturnData;
-            }
-            return stsResult;
-        }
-
-        public TPCANStatus Transfer_End(TPCANHandle handle)
-        {
-            TPCANStatus stsResult;
-            FrameRW frame = new FrameRW();
-
-            stsResult = frame.WriteFrame(handle, Tx_ID, cmdTransferEnd);
-
-            Thread.Sleep(_delayTime);
-
-            if (stsResult == TPCANStatus.PCAN_ERROR_OK)
-            {
-                stsResult = frame.ReadFrame(handle);
-
-                if (stsResult == TPCANStatus.PCAN_ERROR_OK)
-                    this.BaseCmd = frame.ReturnData;
-            }
-            return stsResult;
-        }
-
-        public TPCANStatus PCU_Reset(TPCANHandle handle)
-        {
-            TPCANStatus stsResult;
-            FrameRW frame = new FrameRW();
-
-            stsResult = frame.WriteFrame(handle, Tx_ID, cmdPCUReset);
-
-            Thread.Sleep(_delayTime);
-
-            if (stsResult == TPCANStatus.PCAN_ERROR_OK)
-            {
-                stsResult = frame.ReadFrame(handle);
-
-                if (stsResult == TPCANStatus.PCAN_ERROR_OK)
-                    this.BaseCmd = frame.ReturnData;
-            }
-            return stsResult;
-        }
-
-        public TPCANStatus Download_Request_1(TPCANHandle handle, string binTarget)
-        {
-            TPCANStatus stsResult;
-            byte[] address = new byte[4];
-            FrameRW frame = new FrameRW();
-
-            address = GetAddress(binTarget);
-
-            //REPLACE BIN TYPE ADDRESS INTO COMMAND
-            Array.Copy(address, 0, cmdDownloadReq1, 5, 3);
-
-            stsResult = frame.WriteFrame(handle, Tx_ID, cmdDownloadReq1);
-
-            Thread.Sleep(_delayTime);
-
-            if (stsResult == TPCANStatus.PCAN_ERROR_OK)
-            {
-                stsResult = frame.ReadFrame(handle);
-
-                if (stsResult == TPCANStatus.PCAN_ERROR_OK)
-                    this.BaseCmd = frame.ReturnData;
-            }
-            return stsResult;
-        }
-
-        public TPCANStatus Download_Request_2(TPCANHandle handle, string binTarget, int binSize)
-        {
-            TPCANStatus stsResult;
-            byte[] address = new byte[4];
-            FrameRW frame = new FrameRW();
-
-            address = GetAddress(binTarget);
-
-            byte[] bSize = BitConverter.GetBytes(binSize);
-            Array.Reverse(bSize);
-            Array.Copy(bSize, 0, cmdDownloadReq2, 2, bSize.Length);
-            Array.Copy(address, 3, cmdDownloadReq2, 1, 1);
-
-            stsResult = frame.WriteFrame(handle, Tx_ID, cmdDownloadReq2);
-
-            Thread.Sleep(_delayTime);
-
-            if (stsResult == TPCANStatus.PCAN_ERROR_OK)
-            {
-                stsResult = frame.ReadFrame(handle);
-
-                if (stsResult == TPCANStatus.PCAN_ERROR_OK)
-                    this.BaseCmd = frame.ReturnData;
-            }
-            return stsResult;
-        }
-
-        public TPCANStatus Config_PCU_Resp_1(TPCANHandle handle)
-        {
-            TPCANStatus stsResult;
-            FrameRW frame = new FrameRW();
-
-            stsResult = frame.WriteFrame(handle, Tx_ID_Config, cmdConfigPCU1);
+            stsResult = frame.WriteFrame(handle, id, command);
 
             return stsResult;
         }
 
-        public TPCANStatus Config_PCU_Resp_2(TPCANHandle handle)
-        {
-            TPCANStatus stsResult;
-            FrameRW frame = new FrameRW();
+        //public TPCANStatus Session_ExDiagnotic(TPCANHandle handle)
+        //{
+        //    TPCANStatus stsResult;
+        //    FrameRW frame = new FrameRW();
 
-            stsResult = frame.WriteFrame(handle, Tx_ID_Config, cmdConfigPCU2);
+        //    stsResult = frame.WriteFrame(handle, Tx_ID, cmdDiagnostic);
 
-            return stsResult;
-        }
+        //    Thread.Sleep(_delayTime);
 
-        public TPCANStatus Config_PCU_Resp_3(TPCANHandle handle)
-        {
-            TPCANStatus stsResult;
-            FrameRW frame = new FrameRW();
+        //    if (stsResult == TPCANStatus.PCAN_ERROR_OK)
+        //    {
+        //        stsResult = frame.ReadFrame(handle);
 
-            stsResult = frame.WriteFrame(handle, Tx_ID_Config, cmdConfigPCU3);
+        //        if (stsResult == TPCANStatus.PCAN_ERROR_OK)
+        //            this.Result = frame.ReturnData;
+        //    }
+        //    return stsResult;
+        //}
 
-            return stsResult;
-        }
+        //public TPCANStatus Session_Program(TPCANHandle handle)
+        //{
+        //    TPCANStatus stsResult;
+        //    FrameRW frame = new FrameRW();
 
-        public TPCANStatus Config_PCU_Resp_4(TPCANHandle handle)
-        {
-            TPCANStatus stsResult;
-            FrameRW frame = new FrameRW();
+        //    stsResult = frame.WriteFrame(handle, Tx_ID, cmdProgramming);
 
-            stsResult = frame.WriteFrame(handle, Tx_ID_Config, cmdConfigPCU4);
+        //    Thread.Sleep(_delayTime);
 
-            return stsResult;
-        }
+        //    if (stsResult == TPCANStatus.PCAN_ERROR_OK)
+        //    {
+        //        stsResult = frame.ReadFrame(handle);
 
-        public TPCANStatus Config_PCU_Resp_5(TPCANHandle handle)
-        {
-            TPCANStatus stsResult;
-            FrameRW frame = new FrameRW();
+        //        if (stsResult == TPCANStatus.PCAN_ERROR_OK)
+        //            this.Result = frame.ReturnData;
+        //    }
+        //    return stsResult;
+        //}
 
-            stsResult = frame.WriteFrame(handle, Tx_ID_Config, cmdConfigPCU5);
+        //public TPCANStatus Transfer_End(TPCANHandle handle)
+        //{
+        //    TPCANStatus stsResult;
+        //    FrameRW frame = new FrameRW();
 
-            return stsResult;
-        }
+        //    stsResult = frame.WriteFrame(handle, Tx_ID, cmdTransferEnd);
 
-        public TPCANStatus Config_PCU_Resp_6(TPCANHandle handle)
-        {
-            TPCANStatus stsResult;
-            FrameRW frame = new FrameRW();
-            stsResult = frame.WriteFrame(handle, Tx_ID_Config, cmdConfigPCU6);
+        //    Thread.Sleep(_delayTime);
 
-            return stsResult;
-        }
+        //    if (stsResult == TPCANStatus.PCAN_ERROR_OK)
+        //    {
+        //        stsResult = frame.ReadFrame(handle);
+
+        //        if (stsResult == TPCANStatus.PCAN_ERROR_OK)
+        //            this.Result = frame.ReturnData;
+        //    }
+        //    return stsResult;
+        //}
+
+        //public TPCANStatus PCU_Reset(TPCANHandle handle)
+        //{
+        //    TPCANStatus stsResult;
+        //    FrameRW frame = new FrameRW();
+
+        //    stsResult = frame.WriteFrame(handle, Tx_ID, cmdPCUReset);
+
+        //    Thread.Sleep(_delayTime);
+
+        //    if (stsResult == TPCANStatus.PCAN_ERROR_OK)
+        //    {
+        //        stsResult = frame.ReadFrame(handle);
+
+        //        if (stsResult == TPCANStatus.PCAN_ERROR_OK)
+        //            this.Result = frame.ReturnData;
+        //    }
+        //    return stsResult;
+        //}
+
+        //public TPCANStatus Download_Request_1(TPCANHandle handle, string binTarget)
+        //{
+        //    TPCANStatus stsResult;
+        //    byte[] address = new byte[4];
+        //    FrameRW frame = new FrameRW();
+
+        //    address = GetAddress(binTarget);
+
+        //    //REPLACE BIN TYPE ADDRESS INTO COMMAND
+        //    Array.Copy(address, 0, cmdDownloadReq1, 5, 3);
+
+        //    stsResult = frame.WriteFrame(handle, Tx_ID, cmdDownloadReq1);
+
+        //    Thread.Sleep(_delayTime);
+
+        //    if (stsResult == TPCANStatus.PCAN_ERROR_OK)
+        //    {
+        //        stsResult = frame.ReadFrame(handle);
+
+        //        if (stsResult == TPCANStatus.PCAN_ERROR_OK)
+        //            this.Rx = frame.ReturnData;
+        //    }
+        //    return stsResult;
+        //}
+
+        //public TPCANStatus Download_Request_2(TPCANHandle handle, string binTarget, int binSize)
+        //{
+        //    TPCANStatus stsResult;
+        //    byte[] address = new byte[4];
+        //    FrameRW frame = new FrameRW();
+
+        //    address = GetAddress(binTarget);
+
+        //    byte[] bSize = BitConverter.GetBytes(binSize);
+        //    Array.Reverse(bSize);
+        //    Array.Copy(bSize, 0, cmdDownloadReq2, 2, bSize.Length);
+        //    Array.Copy(address, 3, cmdDownloadReq2, 1, 1);
+
+        //    stsResult = frame.WriteFrame(handle, Tx_ID, cmdDownloadReq2);
+
+        //    Thread.Sleep(_delayTime);
+
+        //    if (stsResult == TPCANStatus.PCAN_ERROR_OK)
+        //    {
+        //        stsResult = frame.ReadFrame(handle);
+
+        //        if (stsResult == TPCANStatus.PCAN_ERROR_OK)
+        //            this.Rx = frame.ReturnData;
+        //    }
+        //    return stsResult;
+        //}
+
+        //public TPCANStatus Config_PCU_Resp_1(TPCANHandle handle)
+        //{
+        //    TPCANStatus stsResult;
+        //    FrameRW frame = new FrameRW();
+
+        //    stsResult = frame.WriteFrame(handle, Tx_ID_Config, cmdConfigPCU1);
+
+        //    return stsResult;
+        //}
+
+        //public TPCANStatus Config_PCU_Resp_2(TPCANHandle handle)
+        //{
+        //    TPCANStatus stsResult;
+        //    FrameRW frame = new FrameRW();
+
+        //    stsResult = frame.WriteFrame(handle, Tx_ID_Config, cmdConfigPCU2);
+
+        //    return stsResult;
+        //}
+
+        //public TPCANStatus Config_PCU_Resp_3(TPCANHandle handle)
+        //{
+        //    TPCANStatus stsResult;
+        //    FrameRW frame = new FrameRW();
+
+        //    stsResult = frame.WriteFrame(handle, Tx_ID_Config, cmdConfigPCU3);
+
+        //    return stsResult;
+        //}
+
+        //public TPCANStatus Config_PCU_Resp_4(TPCANHandle handle)
+        //{
+        //    TPCANStatus stsResult;
+        //    FrameRW frame = new FrameRW();
+
+        //    stsResult = frame.WriteFrame(handle, Tx_ID_Config, cmdConfigPCU4);
+
+        //    return stsResult;
+        //}
+
+        //public TPCANStatus Config_PCU_Resp_5(TPCANHandle handle)
+        //{
+        //    TPCANStatus stsResult;
+        //    FrameRW frame = new FrameRW();
+
+        //    stsResult = frame.WriteFrame(handle, Tx_ID_Config, cmdConfigPCU5);
+
+        //    return stsResult;
+        //}
+
+        //public TPCANStatus Config_PCU_Resp_6(TPCANHandle handle)
+        //{
+        //    TPCANStatus stsResult;
+        //    FrameRW frame = new FrameRW();
+        //    stsResult = frame.WriteFrame(handle, Tx_ID_Config, cmdConfigPCU6);
+
+        //    return stsResult;
+        //}
 
         //public async Task<List<string[]>> BinTransmit(TPCANHandle handle, string BlockSize, byte[] BinData)
         //{
@@ -336,7 +378,7 @@ namespace RDinterface
         //    return stsResult;
         //}
 
-        private byte[] GetAddress(string binTarget)
+        public byte[] GetAddress(string binTarget)
         {
             byte[] address = new byte[4];
 

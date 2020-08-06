@@ -7,8 +7,7 @@
         mc:Ignorable="d"
         Title="LSC RD Interface" Height="650" Width="1200"
         MinHeight="650" MinWidth="1200"
-        ResizeMode="CanMinimize"
-        Loaded="WindowLoad">
+        ResizeMode="CanMinimize">
     <Grid>
         <Grid x:Name="FunSelect" Height="450" Width="288" HorizontalAlignment="Left" VerticalAlignment="Top">
             <Border BorderBrush="Black" BorderThickness="2"/>
@@ -49,7 +48,7 @@
                         </ComboBox>
                         <Button x:Name="btnConnect" Content="Connect" Height="30" Width="80" Margin="750,-350,0,0" Click="btnConnect_Click"/>
                         <Button x:Name="btnRelease" Content="Release" Height="30" Width="80" Margin="750,-250,0,0" Click="btnRelease_Click"/>
-                        
+
                     </Grid>
                 </TabItem>
                 <TabItem Header="FW Update" Visibility="Collapsed">
@@ -128,12 +127,12 @@
         <Grid x:Name="FunRawData" Height="166" Width="388" HorizontalAlignment="Left" VerticalAlignment="Bottom">
             <Border BorderBrush="Black" BorderThickness="2"/>
             <Label Content="CAN Raw Data" Height="30" Width="140" FontSize="18" Margin="12,12,236,124"/>
-            <DataGrid x:Name="dgRawData" ItemsSource="{Binding Collection}" IsReadOnly="True" Height="100" Width="350" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto" AutoGenerateColumns="False" Margin="19,51,19,15">
+            <DataGrid x:Name="dgRawData" IsReadOnly="True" Height="100" Width="350" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto" AutoGenerateColumns="False" Margin="19,51,19,15">
                 <DataGrid.Columns>
-                    <DataGridTextColumn Header="Time" Binding="{Binding RawTime}" Width="70"/>
-                    <DataGridTextColumn Header="ID" Binding="{Binding RawID}" Width="50"/>
-                    <DataGridTextColumn Header="Length" Binding="{Binding RawLength}" Width="50"/>
-                    <DataGridTextColumn Header="Data" Binding="{Binding RawData}" Width="170"/>
+                    <DataGridTextColumn Header="Time" Binding="{Binding Time}" Width="70"/>
+                    <DataGridTextColumn Header="ID" Binding="{Binding ID}" Width="50"/>
+                    <DataGridTextColumn Header="Length" Binding="{Binding Length}" Width="50"/>
+                    <DataGridTextColumn Header="Data" Binding="{Binding Data}" Width="170"/>
                 </DataGrid.Columns>
             </DataGrid>
         </Grid>

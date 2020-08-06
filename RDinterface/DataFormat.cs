@@ -4,7 +4,7 @@ using System.Text;
 
 namespace RDinterface
 {
-    public class ReturnData
+    public class DataFormat
     {
         public string Time { get; set; }
 
