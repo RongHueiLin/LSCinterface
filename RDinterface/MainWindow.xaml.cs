@@ -337,6 +337,7 @@ namespace RDinterface
             TPCANStatus stsResult;
             byte[] address = bc.GetAddress(binTarget);
             string[] temp = new string[8];
+            List<byte[]> TxBin = new List<byte[]>();
 
             //MODIFY DOWNLOAD_REQUEST_1 DATA
             Array.Copy(address, 0, bc.cmdDownloadReq1, 5, 3);
@@ -347,29 +348,29 @@ namespace RDinterface
             Array.Copy(bSize, 0, bc.cmdDownloadReq2, 2, bSize.Length);
             Array.Copy(address, 3, bc.cmdDownloadReq2, 1, 1);
 
-            stsResult = bc.TransmitNormal(m_PcanHandle,bc.Tx_ID,bc.cmdDiagnostic);
+            stsResult = bc.TransmitNormal(handle, bc.Tx_ID,bc.cmdDiagnostic);
             collection.Add(new DataFormat { Time = bc.Tx.Time,ID = bc.Tx.ID,Length = bc.Tx.Length,Data = bc.Tx.Data });
             collection.Add(bc.Rx);
 
-            stsResult = bc.TransmitOnly(m_PcanHandle,bc.Tx_ID_Config,bc.cmdConfigPCU1);
+            stsResult = bc.TransmitOnly(handle, bc.Tx_ID_Config,bc.cmdConfigPCU1);
             collection.Add(new DataFormat { Time = bc.Tx.Time, ID = bc.Tx.ID, Length = bc.Tx.Length, Data = bc.Tx.Data });
             Thread.Sleep(1000);
-            stsResult = bc.TransmitOnly(m_PcanHandle, bc.Tx_ID_Config, bc.cmdConfigPCU2);
+            stsResult = bc.TransmitOnly(handle, bc.Tx_ID_Config, bc.cmdConfigPCU2);
             collection.Add(new DataFormat { Time = bc.Tx.Time, ID = bc.Tx.ID, Length = bc.Tx.Length, Data = bc.Tx.Data });
             Thread.Sleep(1000);
-            stsResult = bc.TransmitOnly(m_PcanHandle, bc.Tx_ID_Config, bc.cmdConfigPCU3);
+            stsResult = bc.TransmitOnly(handle, bc.Tx_ID_Config, bc.cmdConfigPCU3);
             collection.Add(new DataFormat { Time = bc.Tx.Time, ID = bc.Tx.ID, Length = bc.Tx.Length, Data = bc.Tx.Data });
             Thread.Sleep(1000);
 
-            stsResult = bc.TransmitNormal(m_PcanHandle, bc.Tx_ID, bc.cmdProgramming);
+            stsResult = bc.TransmitNormal(handle, bc.Tx_ID, bc.cmdProgramming);
             collection.Add(new DataFormat { Time = bc.Tx.Time, ID = bc.Tx.ID, Length = bc.Tx.Length, Data = bc.Tx.Data });
             collection.Add(bc.Rx);
 
-            stsResult = bc.TransmitNormal(m_PcanHandle, bc.Tx_ID, bc.cmdDownloadReq1);
+            stsResult = bc.TransmitNormal(handle, bc.Tx_ID, bc.cmdDownloadReq1);
             collection.Add(new DataFormat { Time = bc.Tx.Time, ID = bc.Tx.ID, Length = bc.Tx.Length, Data = bc.Tx.Data });
             collection.Add(bc.Rx);
 
-            stsResult = bc.TransmitNormal(m_PcanHandle, bc.Tx_ID, bc.cmdDownloadReq2);
+            stsResult = bc.TransmitNormal(handle, bc.Tx_ID, bc.cmdDownloadReq2);
             collection.Add(new DataFormat { Time = bc.Tx.Time, ID = bc.Tx.ID, Length = bc.Tx.Length, Data = bc.Tx.Data });
             if (stsResult == TPCANStatus.PCAN_ERROR_OK)
             {
@@ -379,29 +380,38 @@ namespace RDinterface
             else
                 return stsResult;
 
-            //stsResult = baseCommand.BinTransmit(m_PcanHandle, temp[3] + temp[4], binData);
-            //UpdateGUI(dgRawData, rawDatas);
-            //rawDatas.Clear();
+            TxBin = bc.BinFormat(temp[3] + temp[4], binData);
+            foreach (byte[] frame in TxBin)
+            {
+                stsResult = bc.TransmitNormal(handle, bc.Tx_ID, frame);
+                collection.Add(new DataFormat { Time = bc.Tx.Time, ID = bc.Tx.ID, Length = bc.Tx.Length, Data = bc.Tx.Data });
+                if (stsResult == TPCANStatus.PCAN_ERROR_OK)
+                {
+                    collection.Add(bc.Rx);
+                }
+                //else
+                //    return stsResult;
+            }
 
-            stsResult = bc.TransmitNormal(m_PcanHandle,bc.Tx_ID,bc.cmdTransferEnd);
+            stsResult = bc.TransmitNormal(handle, bc.Tx_ID,bc.cmdTransferEnd);
             collection.Add(new DataFormat { Time = bc.Tx.Time, ID = bc.Tx.ID, Length = bc.Tx.Length, Data = bc.Tx.Data });
             collection.Add(bc.Rx);
 
-            stsResult = bc.TransmitNormal(m_PcanHandle,bc.Tx_ID,bc.cmdPCUReset);
+            stsResult = bc.TransmitNormal(handle, bc.Tx_ID,bc.cmdPCUReset);
             collection.Add(new DataFormat { Time = bc.Tx.Time, ID = bc.Tx.ID, Length = bc.Tx.Length, Data = bc.Tx.Data });
             collection.Add(bc.Rx);
 
-            stsResult = bc.TransmitNormal(m_PcanHandle, bc.Tx_ID, bc.cmdDiagnostic);
+            stsResult = bc.TransmitNormal(handle, bc.Tx_ID, bc.cmdDiagnostic);
             collection.Add(new DataFormat { Time = bc.Tx.Time, ID = bc.Tx.ID, Length = bc.Tx.Length, Data = bc.Tx.Data });
             collection.Add(bc.Rx);
 
-            stsResult = bc.TransmitOnly(m_PcanHandle, bc.Tx_ID_Config, bc.cmdConfigPCU4);
+            stsResult = bc.TransmitOnly(handle, bc.Tx_ID_Config, bc.cmdConfigPCU4);
             collection.Add(new DataFormat { Time = bc.Tx.Time, ID = bc.Tx.ID, Length = bc.Tx.Length, Data = bc.Tx.Data });
             Thread.Sleep(1000);
-            stsResult = bc.TransmitOnly(m_PcanHandle, bc.Tx_ID_Config, bc.cmdConfigPCU5);
+            stsResult = bc.TransmitOnly(handle, bc.Tx_ID_Config, bc.cmdConfigPCU5);
             collection.Add(new DataFormat { Time = bc.Tx.Time, ID = bc.Tx.ID, Length = bc.Tx.Length, Data = bc.Tx.Data });
             Thread.Sleep(1000);
-            stsResult = bc.TransmitOnly(m_PcanHandle, bc.Tx_ID_Config, bc.cmdConfigPCU6);
+            stsResult = bc.TransmitOnly(handle, bc.Tx_ID_Config, bc.cmdConfigPCU6);
             collection.Add(new DataFormat { Time = bc.Tx.Time, ID = bc.Tx.ID, Length = bc.Tx.Length, Data = bc.Tx.Data });
             Thread.Sleep(1000);
 
