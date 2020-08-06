@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading;
-using System.Threading.Tasks;
 using Peak.Can.Basic;
 using TPCANHandle = System.UInt16;
 
@@ -176,93 +175,6 @@ namespace RDinterface
             }
             return allFrame;
         }
-
-        //public async Task<List<string[]>> BinTransmit(TPCANHandle handle, string BlockSize, byte[] BinData)
-        //{
-        //    TPCANStatus stsResult = 0;
-        //    FrameRW frameRW = new FrameRW();
-        //    int FFdataSize = 4;
-        //    int CFdataSize = 7;
-        //    List<byte[]> BFrame = new List<byte[]>();   //BLOCK DATA BUFFER
-        //    List<byte[]> allFrame = new List<byte[]>(); //FRAME DATA BUFFER
-        //    int blockSize = Convert.ToInt32(BlockSize, 16); //MAX SIZE OF A BLOCK
-        //    int blockCount = BinData.Length / blockSize;    //NUMBER OF FULL BLOCK
-        //    int LstBlockSize = BinData.Length % blockSize;  //LAST BLOCK DATA SIZE
-
-        //    //SPLIT BIN DATA BY BLOCK SIZE
-        //    for (int i = 0; i < blockCount; i++)
-        //    {
-        //        BFrame.Add(new byte[blockSize]);
-        //        Array.Copy(BinData, 0 + i * blockSize, BFrame[i], 0, blockSize);
-        //    }
-        //    if (LstBlockSize != 0)
-        //    {
-        //        BFrame.Add(new byte[LstBlockSize]);
-        //        Array.Copy(BinData, blockSize * blockCount, BFrame[blockCount], 0, LstBlockSize);
-        //    }
-
-        //    // SPLIT BLOCK DATA INTO FRAME
-        //    for (int i = 0; i < BFrame.Count; i++)
-        //    {
-        //        string curBlockSize = Convert.ToString(BFrame[i].Length, 16);            //CURRENT BLOCK SIZE   
-        //        int LstdataSize = (BFrame[i].Length - FFdataSize) % CFdataSize;         //LAST FRAME DATA SIZE
-        //        string[] sftBlock = new string[BFrame[i].Length + 3];                   //BLOCK DATA BUFFER SHIFTING
-
-        //        //CALCULATE AMOUNT OF FRAME
-        //        int frameCount = ((BFrame[i].Length - FFdataSize) / CFdataSize) + 1;
-        //        if (LstdataSize != 0)
-        //            frameCount += 1;
-
-        //        //FORMAT EACH FRAME
-        //        for (int m = 0; m < frameCount; m++)
-        //        {
-        //            int frameIndex = m % 16;
-
-        //            //FIRST FRAME
-        //            if (m == 0)
-        //            {
-        //                allFrame.Add(new byte[8] { 16, 0, 54, 0, 0, 0, 0, 0 });
-
-        //                //ADD FIRST BLOCK DATA
-        //                Array.Copy(BFrame[i], 0, allFrame[allFrame.Count - 1], 8 - FFdataSize, FFdataSize);
-
-        //                //ADD BLOCK SIZE
-        //                allFrame[allFrame.Count - 1][0] += (byte)((BFrame[i].Length >> 8) & 0xFF);
-        //                allFrame[allFrame.Count - 1][1] = (byte)(BFrame[i].Length & 0xFF);
-
-        //                //ADD BLOCK SEQUNCE COUNTER
-        //                allFrame[allFrame.Count - 1][3] = (byte)(i + 1);
-        //            }
-        //            //LAST FRAME
-        //            else if (m == frameCount - 1)
-        //            {
-        //                allFrame.Add(new byte[8] { 32, 0, 0, 0, 0, 0, 0, 0 });
-        //                Array.Copy(BFrame[i], FFdataSize + (CFdataSize * (m - 1)), allFrame[allFrame.Count - 1], 1, LstdataSize);
-        //                allFrame[allFrame.Count - 1][0] += (byte)frameIndex;
-        //            }
-        //            //OTHER FRAME
-        //            else
-        //            {
-        //                allFrame.Add(new byte[8] { 32, 0, 0, 0, 0, 0, 0, 0 });
-        //                Array.Copy(BFrame[i], FFdataSize + (CFdataSize * (m - 1)), allFrame[allFrame.Count - 1], 1, 7);
-        //                allFrame[allFrame.Count - 1][0] += (byte)frameIndex;
-        //            }
-        //        }
-        //    }
-
-        //    //TRANSMIT BIN FILE DATA
-        //    foreach (byte[] frame in allFrame)
-        //    {
-        //        stsResult = frameRW.WriteFrame(handle, Tx_ID, frame);
-
-        //        if (stsResult == TPCANStatus.PCAN_ERROR_OK)
-        //        {
-        //            await frameRW.ReadFrame(handle);
-        //        }
-        //        else return stsResult;
-        //    }
-        //    return stsResult;
-        //}
 
         public byte[] GetAddress(string binTarget)
         {

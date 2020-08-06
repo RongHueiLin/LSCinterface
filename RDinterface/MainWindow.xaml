@@ -24,9 +24,9 @@
             <TabControl x:Name="tcWindow" SelectedIndex="{Binding SelectedIndex, ElementName=cbFunction}" Height="450" Width="900" BorderBrush="Black" BorderThickness="2">
                 <TabItem Header="Profile Setting" Visibility="Collapsed">
                     <Grid>
-                        <Label Content="CAN Device" Height="40" Width="150" Margin="-650,-300,0,0" FontSize="18" VerticalContentAlignment="Center"/>
-                        <ComboBox x:Name="cbDevice" Height="40" Width="150" Margin="-400,-300,0,0" FontSize="18" VerticalContentAlignment="Center"/>
-                        <Button x:Name="btnRefresh" Height="30" Width="30" Margin="-200,-300,0,0" Click="btnRefresh_Click">
+                        <Label Content="CAN Device" Height="40" Width="150" Margin="-700,-300,0,0" FontSize="18" VerticalContentAlignment="Center"/>
+                        <ComboBox x:Name="cbDevice" Height="40" Width="200" Margin="-400,-300,0,0" FontSize="18" VerticalContentAlignment="Center"/>
+                        <Button x:Name="btnRefresh" Height="30" Width="30" Margin="-150,-300,0,0" Click="btnRefresh_Click">
                             <Image Source="icon\Clear.png"/>
                         </Button>
                         <Label Content="CAN Baud Rate" Height="40" Width="150" Margin="100,-300,0,0" FontSize="18" VerticalContentAlignment="Center" HorizontalContentAlignment="Center"/>
@@ -113,7 +113,7 @@
                                 <Image Source="icon\folder.png"/>
                             </Button>
                         </Grid>
-                        <ProgressBar x:Name="pbLoadScale" Height="40" Width="700" Margin="34,342,158,39" BorderBrush="Black" BorderThickness="2"/>
+                        <ProgressBar x:Name="pbLoadScale" Minimum="0" Height="40" Width="700" Margin="34,342,158,39" BorderBrush="Black" BorderThickness="2"/>
                         <Button x:Name="btnBootLoad" Content="BootLoad" BorderBrush="Black" BorderThickness="2" Height="40" Width="100" FontSize="18" Margin="764,340,28,41" Click="btnBootLoad_Click"/>
                     </Grid>
                 </TabItem>
