@@ -7,7 +7,8 @@
         mc:Ignorable="d"
         Title="LSC RD Interface" Height="650" Width="1200"
         MinHeight="650" MinWidth="1200"
-        ResizeMode="CanMinimize">
+        ResizeMode="CanMinimize"
+        Loaded="WindowLoad">
     <Grid>
         <Grid x:Name="FunSelect" Height="450" Width="288" HorizontalAlignment="Left" VerticalAlignment="Top">
             <Border BorderBrush="Black" BorderThickness="2"/>
@@ -16,6 +17,8 @@
                 <ComboBoxItem Content="Profile Setting"/>
                 <ComboBoxItem Content="FW Update"/>
             </ComboBox>
+            <Label Content="ms" Height="30" Width="40" FontSize="18" Margin="94,146,154,274"/>
+            <TextBox x:Name="tbCmdTime" BorderBrush="Black" BorderThickness="2" Height="30" Width="60" FontSize="18" Text="10" VerticalContentAlignment="Center" Margin="34,146,194,274" LostFocus="tbCmdTime_LostFocus"/>
         </Grid>
         <Grid x:Name="FunWindow" Height="450" Width="900" HorizontalAlignment="Right" VerticalAlignment="Top">
             <Border BorderBrush="Black" BorderThickness="2"/>
@@ -125,7 +128,7 @@
         <Grid x:Name="FunRawData" Height="166" Width="388" HorizontalAlignment="Left" VerticalAlignment="Bottom">
             <Border BorderBrush="Black" BorderThickness="2"/>
             <Label Content="CAN Raw Data" Height="30" Width="140" FontSize="18" Margin="12,12,236,124"/>
-            <DataGrid x:Name="dgRawData" IsReadOnly="True" Height="100" Width="350" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto" AutoGenerateColumns="False" Margin="19,51,19,15">
+            <DataGrid x:Name="dgRawData" ItemsSource="{Binding Collection}" IsReadOnly="True" Height="100" Width="350" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto" AutoGenerateColumns="False" Margin="19,51,19,15">
                 <DataGrid.Columns>
                     <DataGridTextColumn Header="Time" Binding="{Binding RawTime}" Width="70"/>
                     <DataGridTextColumn Header="ID" Binding="{Binding RawID}" Width="50"/>

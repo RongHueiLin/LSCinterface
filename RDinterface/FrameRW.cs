@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Reflection.Metadata.Ecma335;
 using System.Threading;
+using System.Threading.Tasks;
 using Peak.Can.Basic;
 using TPCANHandle = System.UInt16;
 
@@ -8,12 +10,20 @@ namespace RDinterface
 {
     public class FrameRW
     {
-        public TPCANStatus WriteFrame(TPCANHandle CanHandle,string writeID, byte[] writeData, ref List<string[]> DataInfo)
+        public TPCANStatus CanStatus { get; }
+
+        public ReturnData ReturnData { get; }
+
+        public FrameRW()
+        {
+            ReturnData = new ReturnData();
+        }
+
+        public TPCANStatus WriteFrame(TPCANHandle CanHandle,string writeID, byte[] writeData)
         {
             //CREATE MESSAGE STRUCTURE
             TPCANMsg CANMsg = new TPCANMsg();
             CANMsg.DATA = new byte[8];
-            string[] dataInfo = new string[4];
 
             //CONFIGURATE THE MESSAGE
             CANMsg.ID = Convert.ToUInt32(writeID, 16);
@@ -26,32 +36,26 @@ namespace RDinterface
                 CANMsg.DATA[i] = writeData[i];
             }
 
-            dataInfo[0] = DateTime.Now.TimeOfDay.ToString();
-            dataInfo[1] = Convert.ToString(CANMsg.ID, 16);
-            dataInfo[2] = CANMsg.DATA.Length.ToString();
-            dataInfo[3] = BitConverter.ToString(CANMsg.DATA).Replace("-"," ");
-            DataInfo.Add(dataInfo);
-
             return PCANBasic.Write(CanHandle, ref CANMsg);
         }
 
-        public TPCANStatus ReadFrame(TPCANHandle CanHandle, ref List<string[]> DataInfo)
+        public TPCANStatus ReadFrame(TPCANHandle CanHandle)
         {
+            //CREATE MESSAGE STRUCTURE
             TPCANMsg CANMsg;
             TPCANTimestamp CANTimeStamp;
             TPCANStatus stsResult;
-            string[] dataInfo = new string[4];
 
-            Thread.Sleep(10);   //WAIT 10 MILLISECOND
-
+            //READ RETURN DATA
             stsResult = PCANBasic.Read(CanHandle, out CANMsg, out CANTimeStamp);
+            
+            //IF READ SUCCESS CHANGE PROPERTY, ELSE IF RETURN ERROR
             if (stsResult == TPCANStatus.PCAN_ERROR_OK)
             {
-                dataInfo[0] = DateTime.Now.TimeOfDay.ToString();
-                dataInfo[1] = Convert.ToString(CANMsg.ID, 16);
-                dataInfo[2] = CANMsg.DATA.Length.ToString();
-                dataInfo[3] = BitConverter.ToString(CANMsg.DATA).Replace("-", " ");
-                DataInfo.Add(dataInfo);
+                this.ReturnData.Time = DateTime.Now.TimeOfDay.ToString();
+                this.ReturnData.ID = Convert.ToString(CANMsg.ID, 16);
+                this.ReturnData.Length = CANMsg.DATA.Length.ToString();
+                this.ReturnData.Data = BitConverter.ToString(CANMsg.DATA).Replace("-", " ");
             }
             return stsResult;
         }
