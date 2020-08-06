@@ -21,7 +21,6 @@ namespace RDinterface
         private TPCANHandle m_PcanHandle;   //DEVICE HANDLE
         private TPCANBaudrate m_Baudrate = TPCANBaudrate.PCAN_BAUD_500K;   //TRANSMIT BAUD RATE
         private TPCANType m_HwType = TPCANType.PCAN_TYPE_ISA;   //HARDWARE TYPE
-        //private List<string[]> rawDatas = new List<string[]>();
         BaseCommand bc = new BaseCommand();
         ObservableCollection<DataFormat> collection = new ObservableCollection<DataFormat>();
 
@@ -75,11 +74,7 @@ namespace RDinterface
 
         private void btnClear_Click(object sender, RoutedEventArgs e)
         {
-            //CLEAR HMI RAW DATA GRID
-            collection.Clear();
-            //dgRawData.Items.Refresh();
-            //dgRawData.Items.Clear();
-
+            collection.Clear();     //CLEAR DATA GRID
             tbAlarmLog.Text = "";   //CLEAR HMI ALARM LOG
         }
 
@@ -416,23 +411,6 @@ namespace RDinterface
             Thread.Sleep(1000);
 
             return stsResult;
-        }
-
-        private void UpdateGUI(DataGrid dataGrid, List<string[]> rawData)
-        {
-            if (rawData.Count > 0)
-            {
-                foreach (string[] data in rawData)
-                {
-                    var tempData = new RawDataFormat { RawTime = data[0], RawID = data[1], RawLength = data[2], RawData = data[3] };
-
-                    dataGrid.Dispatcher.Invoke(() =>
-                    {
-                       dataGrid.Items.Add(tempData);
-                    }
-                    );
-                }
-            }
         }
     }
 }

@@ -133,6 +133,10 @@ namespace Peak.Can.Basic
         /// <remarks>Value was changed from 0x80000 to 0x8000000</remarks>
         /// </summary>
         PCAN_ERROR_ILLOPERATION = 0x8000000,
+        /// <summary>
+        /// Negative Response Message Flow
+        /// </summary>
+        PCAN_ERROR_RESPONSE = 0x9900,
     }
 
     /// <summary>
