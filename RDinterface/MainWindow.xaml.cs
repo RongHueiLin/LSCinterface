@@ -181,11 +181,10 @@ namespace RDinterface
             }
         }
 
-        private void btnBootLoad_Click(object sender, RoutedEventArgs e)
+        private async void btnBootLoad_Click(object sender, RoutedEventArgs e)
         {
             TPCANStatus stsResult = 0;
             Dictionary<string,byte[]> BinSelect = new Dictionary<string, byte[]>();
-            //List<string[]> rawDatas = new List<string[]>();
 
             GridFW.IsEnabled = false;
 
@@ -200,16 +199,21 @@ namespace RDinterface
             if (cbBinM2.IsChecked == true && DatabyteM2.Length > 0)
                 BinSelect.Add("M2",DatabyteM2);
 
-            foreach (var bin in BinSelect)
+            var task = Task.Run(() =>
             {
-                if (stsResult == TPCANStatus.PCAN_ERROR_OK)
-                    stsResult = BinProcess(m_PcanHandle, bin.Key, bin.Value);
-                else
+                foreach (var bin in BinSelect)
                 {
-                    tbAlarmLog.Text = stsResult.ToString();
-                    break;
+                    if (stsResult == TPCANStatus.PCAN_ERROR_OK)
+                        stsResult = BinProcess(m_PcanHandle, bin.Key, bin.Value);
+                    else
+                    {
+                        tbAlarmLog.Text = stsResult.ToString();
+                        break;
+                    }
                 }
-            }
+            });
+
+            await task;
 
             GridFW.IsEnabled = true;
         }
@@ -344,32 +348,32 @@ namespace RDinterface
             Array.Copy(address, 3, bc.cmdDownloadReq2, 1, 1);
 
             stsResult = bc.TransmitNormal(handle, bc.Tx_ID,bc.cmdDiagnostic);
-            collection.Add(new DataFormat { Time = bc.Tx.Time,ID = bc.Tx.ID,Length = bc.Tx.Length,Data = bc.Tx.Data });
-            collection.Add(bc.Rx);
+            Dispatcher.BeginInvoke(new Action(() => { collection.Add(new DataFormat { Time = bc.Tx.Time, ID = bc.Tx.ID, Length = bc.Tx.Length, Data = bc.Tx.Data }); }));
+            Dispatcher.BeginInvoke(new Action(() => { collection.Add(bc.Rx); }));
 
             stsResult = bc.TransmitOnly(handle, bc.Tx_ID_Config,bc.cmdConfigPCU1);
-            collection.Add(new DataFormat { Time = bc.Tx.Time, ID = bc.Tx.ID, Length = bc.Tx.Length, Data = bc.Tx.Data });
+            Dispatcher.BeginInvoke(new Action(() => { collection.Add(new DataFormat { Time = bc.Tx.Time, ID = bc.Tx.ID, Length = bc.Tx.Length, Data = bc.Tx.Data }); }));
             Thread.Sleep(1000);
             stsResult = bc.TransmitOnly(handle, bc.Tx_ID_Config, bc.cmdConfigPCU2);
-            collection.Add(new DataFormat { Time = bc.Tx.Time, ID = bc.Tx.ID, Length = bc.Tx.Length, Data = bc.Tx.Data });
+            Dispatcher.BeginInvoke(new Action(() => { collection.Add(new DataFormat { Time = bc.Tx.Time, ID = bc.Tx.ID, Length = bc.Tx.Length, Data = bc.Tx.Data }); }));
             Thread.Sleep(1000);
             stsResult = bc.TransmitOnly(handle, bc.Tx_ID_Config, bc.cmdConfigPCU3);
-            collection.Add(new DataFormat { Time = bc.Tx.Time, ID = bc.Tx.ID, Length = bc.Tx.Length, Data = bc.Tx.Data });
+            Dispatcher.BeginInvoke(new Action(() => { collection.Add(new DataFormat { Time = bc.Tx.Time, ID = bc.Tx.ID, Length = bc.Tx.Length, Data = bc.Tx.Data }); }));
             Thread.Sleep(1000);
 
             stsResult = bc.TransmitNormal(handle, bc.Tx_ID, bc.cmdProgramming);
-            collection.Add(new DataFormat { Time = bc.Tx.Time, ID = bc.Tx.ID, Length = bc.Tx.Length, Data = bc.Tx.Data });
-            collection.Add(bc.Rx);
+            Dispatcher.BeginInvoke(new Action(() => { collection.Add(new DataFormat { Time = bc.Tx.Time, ID = bc.Tx.ID, Length = bc.Tx.Length, Data = bc.Tx.Data }); }));
+            Dispatcher.BeginInvoke(new Action(() => { collection.Add(bc.Rx); }));
 
             stsResult = bc.TransmitNormal(handle, bc.Tx_ID, bc.cmdDownloadReq1);
-            collection.Add(new DataFormat { Time = bc.Tx.Time, ID = bc.Tx.ID, Length = bc.Tx.Length, Data = bc.Tx.Data });
-            collection.Add(bc.Rx);
+            Dispatcher.BeginInvoke(new Action(() => { collection.Add(new DataFormat { Time = bc.Tx.Time, ID = bc.Tx.ID, Length = bc.Tx.Length, Data = bc.Tx.Data }); }));
+            Dispatcher.BeginInvoke(new Action(() => { collection.Add(bc.Rx); }));
 
             stsResult = bc.TransmitNormal(handle, bc.Tx_ID, bc.cmdDownloadReq2);
-            collection.Add(new DataFormat { Time = bc.Tx.Time, ID = bc.Tx.ID, Length = bc.Tx.Length, Data = bc.Tx.Data });
+            Dispatcher.BeginInvoke(new Action(() => { collection.Add(new DataFormat { Time = bc.Tx.Time, ID = bc.Tx.ID, Length = bc.Tx.Length, Data = bc.Tx.Data }); }));
             if (stsResult == TPCANStatus.PCAN_ERROR_OK)
             {
-                collection.Add(bc.Rx);
+                Dispatcher.BeginInvoke(new Action(() => { collection.Add(bc.Rx); }));
                 temp = bc.Rx.Data.Split(" ");
             }
             else
@@ -379,35 +383,35 @@ namespace RDinterface
             foreach (byte[] frame in TxBin)
             {
                 stsResult = bc.TransmitNormal(handle, bc.Tx_ID, frame);
-                collection.Add(new DataFormat { Time = bc.Tx.Time, ID = bc.Tx.ID, Length = bc.Tx.Length, Data = bc.Tx.Data });
+                Dispatcher.BeginInvoke(new Action(() => { collection.Add(new DataFormat { Time = bc.Tx.Time, ID = bc.Tx.ID, Length = bc.Tx.Length, Data = bc.Tx.Data }); }));
                 if (stsResult == TPCANStatus.PCAN_ERROR_OK)
                 {
-                    collection.Add(bc.Rx);
+                    Dispatcher.BeginInvoke(new Action(() => { collection.Add(bc.Rx); }));
                 }
                 //else
                 //    return stsResult;
             }
 
             stsResult = bc.TransmitNormal(handle, bc.Tx_ID,bc.cmdTransferEnd);
-            collection.Add(new DataFormat { Time = bc.Tx.Time, ID = bc.Tx.ID, Length = bc.Tx.Length, Data = bc.Tx.Data });
-            collection.Add(bc.Rx);
+            Dispatcher.BeginInvoke(new Action(() => { collection.Add(new DataFormat { Time = bc.Tx.Time, ID = bc.Tx.ID, Length = bc.Tx.Length, Data = bc.Tx.Data }); }));
+            Dispatcher.BeginInvoke(new Action(() => { collection.Add(bc.Rx); }));
 
             stsResult = bc.TransmitNormal(handle, bc.Tx_ID,bc.cmdPCUReset);
-            collection.Add(new DataFormat { Time = bc.Tx.Time, ID = bc.Tx.ID, Length = bc.Tx.Length, Data = bc.Tx.Data });
-            collection.Add(bc.Rx);
+            Dispatcher.BeginInvoke(new Action(() => { collection.Add(new DataFormat { Time = bc.Tx.Time, ID = bc.Tx.ID, Length = bc.Tx.Length, Data = bc.Tx.Data }); }));
+            Dispatcher.BeginInvoke(new Action(() => { collection.Add(bc.Rx); }));
 
             stsResult = bc.TransmitNormal(handle, bc.Tx_ID, bc.cmdDiagnostic);
-            collection.Add(new DataFormat { Time = bc.Tx.Time, ID = bc.Tx.ID, Length = bc.Tx.Length, Data = bc.Tx.Data });
-            collection.Add(bc.Rx);
+            Dispatcher.BeginInvoke(new Action(() => { collection.Add(new DataFormat { Time = bc.Tx.Time, ID = bc.Tx.ID, Length = bc.Tx.Length, Data = bc.Tx.Data }); }));
+            Dispatcher.BeginInvoke(new Action(() => { collection.Add(bc.Rx); }));
 
             stsResult = bc.TransmitOnly(handle, bc.Tx_ID_Config, bc.cmdConfigPCU4);
-            collection.Add(new DataFormat { Time = bc.Tx.Time, ID = bc.Tx.ID, Length = bc.Tx.Length, Data = bc.Tx.Data });
+            Dispatcher.BeginInvoke(new Action(() => { collection.Add(new DataFormat { Time = bc.Tx.Time, ID = bc.Tx.ID, Length = bc.Tx.Length, Data = bc.Tx.Data }); }));
             Thread.Sleep(1000);
             stsResult = bc.TransmitOnly(handle, bc.Tx_ID_Config, bc.cmdConfigPCU5);
-            collection.Add(new DataFormat { Time = bc.Tx.Time, ID = bc.Tx.ID, Length = bc.Tx.Length, Data = bc.Tx.Data });
+            Dispatcher.BeginInvoke(new Action(() => { collection.Add(new DataFormat { Time = bc.Tx.Time, ID = bc.Tx.ID, Length = bc.Tx.Length, Data = bc.Tx.Data }); }));
             Thread.Sleep(1000);
             stsResult = bc.TransmitOnly(handle, bc.Tx_ID_Config, bc.cmdConfigPCU6);
-            collection.Add(new DataFormat { Time = bc.Tx.Time, ID = bc.Tx.ID, Length = bc.Tx.Length, Data = bc.Tx.Data });
+            Dispatcher.BeginInvoke(new Action(() => { collection.Add(new DataFormat { Time = bc.Tx.Time, ID = bc.Tx.ID, Length = bc.Tx.Length, Data = bc.Tx.Data }); }));
             Thread.Sleep(1000);
 
             return stsResult;
