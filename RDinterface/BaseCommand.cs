@@ -82,7 +82,7 @@ namespace RDinterface
             {
                 stsResult = frame.ReadFrame(handle);
 
-                if (stsResult == TPCANStatus.PCAN_ERROR_OK)
+                if (stsResult == TPCANStatus.PCAN_ERROR_OK || stsResult ==TPCANStatus.PCAN_ERROR_RESPONSE)
                     this.Rx = frame.ReturnData;
             }
             return stsResult;
