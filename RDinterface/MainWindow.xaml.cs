@@ -23,6 +23,7 @@ namespace RDinterface
         private TPCANType m_HwType = TPCANType.PCAN_TYPE_ISA;   //HARDWARE TYPE
         BaseCommand bc = new BaseCommand();
         ObservableCollection<DataFormat> collection = new ObservableCollection<DataFormat>();
+        Dictionary<TPCANHandle, object> dev = new Dictionary<TPCANHandle, object>();
 
         //SCAN DEVICE LIST
         TPCANHandle[] m_NonPnPHandles = new TPCANHandle[]
@@ -61,7 +62,7 @@ namespace RDinterface
             if (stsResult == TPCANStatus.PCAN_ERROR_OK)
             {
                 btnConnect.IsEnabled = false;
-                tbAlarmLog.Text += "The desired Device-ID was successfully configured \r\n";
+                tbAlarmLog.Text += "Device was successfully configured \n";
             }
         }
 
@@ -70,6 +71,8 @@ namespace RDinterface
             PCANBasic.Uninitialize(m_PcanHandle);   //DISCONNECT PCAN DEVICE
             m_PcanHandle = 0;   //RESET PCAN HANDLE
             btnConnect.IsEnabled = true;
+
+            tbAlarmLog.Text += "Device was successfully released \n";
         }
 
         private void btnClear_Click(object sender, RoutedEventArgs e)
@@ -220,9 +223,7 @@ namespace RDinterface
                         if (stsResult == TPCANStatus.PCAN_ERROR_OK)
                             stsResult = BinProcess(m_PcanHandle, bin.Key, bin.Value);
                         else
-                        {
                             break;
-                        }
                     }
                 });
 
@@ -237,6 +238,17 @@ namespace RDinterface
 
             GridFW.IsEnabled = true;
             btnRelease.IsEnabled = true;
+        }
+
+        private void cbDevice_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            foreach (var sel in dev)
+            {
+                if (sel.Value.Equals(cbDevice.SelectedValue))
+                {
+                    m_PcanHandle = Convert.ToUInt16(sel.Key);
+                }
+            }
         }
 
         //SET DELAY TIME BETWEEN FRAME W/R
@@ -306,6 +318,9 @@ namespace RDinterface
             TPCANStatus stsResult;
             uint isChannelValid;
             UInt32 iDeviceID = 0;
+
+            dev.Clear();
+
             try
             {
                 foreach (var Device in m_NonPnPHandles)
@@ -323,7 +338,8 @@ namespace RDinterface
                                 case 0x41:
                                 case 0x42:
                                 case 0x43:
-                                    cbDevice.Items.Add($"PCAN-PCI ({iDeviceID.ToString()}h)");
+                                    cbDevice.Items.Add($"PCAN PCI({iDeviceID}h)");
+                                    dev.Add(Device, $"PCAN PCI({iDeviceID}h)");
                                     break;
 
                                 case 0x51:
@@ -331,7 +347,8 @@ namespace RDinterface
                                 case 0x53:
                                 case 0x54:
                                 case 0x55:
-                                    cbDevice.Items.Add($"PCAN-USB ({iDeviceID.ToString()}h)");
+                                    cbDevice.Items.Add($"PCAN USB({iDeviceID}h)");
+                                    dev.Add(Device, $"PCAN USB({iDeviceID}h)");
                                     break;
 
                                 case 0x801:
@@ -339,7 +356,8 @@ namespace RDinterface
                                 case 0x803:
                                 case 0x804:
                                 case 0x805:
-                                    cbDevice.Items.Add($"PCAN-LAN ({iDeviceID.ToString()}h)");
+                                    cbDevice.Items.Add($"PCAN LAN({iDeviceID}h)");
+                                    dev.Add(Device, $"PCAN LAN({iDeviceID}h)");
                                     break;
                             }
                         }

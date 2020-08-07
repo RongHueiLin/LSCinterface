@@ -24,8 +24,8 @@
             <TabControl x:Name="tcWindow" SelectedIndex="{Binding SelectedIndex, ElementName=cbFunction}" Height="450" Width="900" BorderBrush="Black" BorderThickness="2">
                 <TabItem Header="Profile Setting" Visibility="Collapsed">
                     <Grid>
-                        <Label Content="CAN Device" Height="40" Width="150" Margin="-700,-300,0,0" FontSize="18" VerticalContentAlignment="Center"/>
-                        <ComboBox x:Name="cbDevice" Height="40" Width="200" Margin="-400,-300,0,0" FontSize="18" VerticalContentAlignment="Center"/>
+                        <Label Content="CAN Device" Height="40" Width="150" Margin="-700,-300,0,0" FontSize="18" VerticalContentAlignment="Center" />
+                        <ComboBox x:Name="cbDevice" Height="40" Width="200" Margin="-400,-300,0,0" FontSize="18" VerticalContentAlignment="Center" SelectionChanged="cbDevice_SelectionChanged"/>
                         <Button x:Name="btnRefresh" Height="30" Width="30" Margin="-150,-300,0,0" Click="btnRefresh_Click">
                             <Image Source="icon\Clear.png"/>
                         </Button>
