@@ -332,7 +332,6 @@ namespace RDinterface
             {
                 foreach (var Device in m_NonPnPHandles)
                 {
-
                     stsResult = PCANBasic.GetValue(Device, TPCANParameter.PCAN_CHANNEL_CONDITION, out isChannelValid, sizeof(uint));
                     if (stsResult == TPCANStatus.PCAN_ERROR_OK)
                     {
@@ -396,16 +395,23 @@ namespace RDinterface
             Array.Copy(address, 3, bc.cmdDownloadReq2, 1, 1);
 
             stsResult = bc.TransmitNormal(handle, bc.Tx_ID,bc.cmdDiagnostic, timeout);
-            Td = new DataFormat { Time = bc.Tx.Time, ID = bc.Tx.ID, Length = bc.Tx.Length, Data = bc.Tx.Data };
-            Rd = new DataFormat { Time = bc.Rx.Time, ID = bc.Rx.ID, Length = bc.Rx.Length, Data = bc.Rx.Data };
-            Dispatcher.BeginInvoke(new Action(() => 
-            {
-                collection.Add(Td);
-                collection.Add(Rd);
-                pbLoadScale.Value += 1;
-            }));
-            if (stsResult != TPCANStatus.PCAN_ERROR_OK)
+            if (stsResult != TPCANStatus.PCAN_ERROR_OK && stsResult != TPCANStatus.PCAN_ERROR_RESPONSE)
                 return stsResult;
+            else
+            {
+                Td = new DataFormat { Time = bc.Tx.Time, ID = bc.Tx.ID, Length = bc.Tx.Length, Data = bc.Tx.Data };
+                Rd = new DataFormat { Time = bc.Rx.Time, ID = bc.Rx.ID, Length = bc.Rx.Length, Data = bc.Rx.Data };
+                bc.FCdelay(Rd.Data);
+
+                Dispatcher.BeginInvoke(new Action(() => 
+                {
+                    collection.Add(Td);
+                    collection.Add(Rd);
+                    pbLoadScale.Value += 1;
+                }));
+                if(stsResult == TPCANStatus.PCAN_ERROR_RESPONSE)
+                    return stsResult;
+            }
 
             stsResult = bc.TransmitOnly(handle, bc.Tx_ID_Config,bc.cmdConfigPCU1);
             Dispatcher.BeginInvoke(new Action(() => {
@@ -438,50 +444,52 @@ namespace RDinterface
                 return stsResult;
 
             stsResult = bc.TransmitNormal(handle, bc.Tx_ID, bc.cmdProgramming, timeout);
-            Td = new DataFormat { Time = bc.Tx.Time, ID = bc.Tx.ID, Length = bc.Tx.Length, Data = bc.Tx.Data };
-            Rd = new DataFormat { Time = bc.Rx.Time, ID = bc.Rx.ID, Length = bc.Rx.Length, Data = bc.Rx.Data };
-            Dispatcher.BeginInvoke(new Action(() =>
-            {
-                collection.Add(Td);
-                collection.Add(Rd);
-                pbLoadScale.Value += 1;
-            }));
-            if (stsResult != TPCANStatus.PCAN_ERROR_OK)
+            if (stsResult != TPCANStatus.PCAN_ERROR_OK && stsResult != TPCANStatus.PCAN_ERROR_RESPONSE)
                 return stsResult;
-
-            stsResult = bc.TransmitNormal(handle, bc.Tx_ID, bc.cmdDownloadReq1, timeout);
-            Td = new DataFormat { Time = bc.Tx.Time, ID = bc.Tx.ID, Length = bc.Tx.Length, Data = bc.Tx.Data };
-            Rd = new DataFormat { Time = bc.Rx.Time, ID = bc.Rx.ID, Length = bc.Rx.Length, Data = bc.Rx.Data };
-            Dispatcher.BeginInvoke(new Action(() =>
-            {
-                collection.Add(Td);
-                collection.Add(Rd);
-                pbLoadScale.Value += 1;
-            }));
-            if (stsResult != TPCANStatus.PCAN_ERROR_OK)
-                return stsResult;
-
-            stsResult = bc.TransmitNormal(handle, bc.Tx_ID, bc.cmdDownloadReq2, timeout);
-            Td = new DataFormat { Time = bc.Tx.Time, ID = bc.Tx.ID, Length = bc.Tx.Length, Data = bc.Tx.Data };
-            Rd = new DataFormat { Time = bc.Rx.Time, ID = bc.Rx.ID, Length = bc.Rx.Length, Data = bc.Rx.Data };
-            Dispatcher.BeginInvoke(new Action(() =>
-            {
-                collection.Add(Td);
-                collection.Add(Rd);
-                pbLoadScale.Value += 1;
-            }));
-            if (stsResult == TPCANStatus.PCAN_ERROR_OK)
-                if (Rd.Data != null && Rd.Data != "")
-                    temp = Rd.Data.Split(" ");
             else
-                return stsResult;
-
-            TxBin = bc.BinFormat(temp[3] + temp[4], binData);   //REFORMAT BIN DATA FOR TRANSMIT
-            foreach (byte[] frame in TxBin)
             {
-                stsResult = bc.TransmitNormal(handle, bc.Tx_ID, frame, timeout);
                 Td = new DataFormat { Time = bc.Tx.Time, ID = bc.Tx.ID, Length = bc.Tx.Length, Data = bc.Tx.Data };
                 Rd = new DataFormat { Time = bc.Rx.Time, ID = bc.Rx.ID, Length = bc.Rx.Length, Data = bc.Rx.Data };
+                bc.FCdelay(Rd.Data);
+
+                Dispatcher.BeginInvoke(new Action(() => 
+                {
+                    collection.Add(Td);
+                    collection.Add(Rd);
+                    pbLoadScale.Value += 1;
+                }));
+                if(stsResult == TPCANStatus.PCAN_ERROR_RESPONSE)
+                    return stsResult;
+            }
+
+            stsResult = bc.TransmitNormal(handle, bc.Tx_ID, bc.cmdDownloadReq1, timeout);
+            if (stsResult != TPCANStatus.PCAN_ERROR_OK && stsResult != TPCANStatus.PCAN_ERROR_RESPONSE)
+                return stsResult;
+            else
+            {
+                Td = new DataFormat { Time = bc.Tx.Time, ID = bc.Tx.ID, Length = bc.Tx.Length, Data = bc.Tx.Data };
+                Rd = new DataFormat { Time = bc.Rx.Time, ID = bc.Rx.ID, Length = bc.Rx.Length, Data = bc.Rx.Data };
+                bc.FCdelay(Rd.Data);
+
+                Dispatcher.BeginInvoke(new Action(() => 
+                {
+                    collection.Add(Td);
+                    collection.Add(Rd);
+                    pbLoadScale.Value += 1;
+                }));
+                if(stsResult == TPCANStatus.PCAN_ERROR_RESPONSE)
+                    return stsResult;
+            }
+
+            stsResult = bc.TransmitNormal(handle, bc.Tx_ID, bc.cmdDownloadReq2, timeout);
+            if (stsResult != TPCANStatus.PCAN_ERROR_OK && stsResult != TPCANStatus.PCAN_ERROR_RESPONSE)
+                return stsResult;
+            else
+            {
+                Td = new DataFormat { Time = bc.Tx.Time, ID = bc.Tx.ID, Length = bc.Tx.Length, Data = bc.Tx.Data };
+                Rd = new DataFormat { Time = bc.Rx.Time, ID = bc.Rx.ID, Length = bc.Rx.Length, Data = bc.Rx.Data };
+                bc.FCdelay(Rd.Data);
+
                 Dispatcher.BeginInvoke(new Action(() =>
                 {
                     collection.Add(Td);
@@ -489,47 +497,94 @@ namespace RDinterface
                     pbLoadScale.Value += 1;
                 }));
 
-                Thread.Sleep(10);
-
-                if (stsResult != TPCANStatus.PCAN_ERROR_OK)
+                if(stsResult == TPCANStatus.PCAN_ERROR_OK)
+                {
+                    if (Rd.Data != null && Rd.Data != "")
+                        temp = Rd.Data.Split(" ");
+                }
+                else if(stsResult == TPCANStatus.PCAN_ERROR_RESPONSE)
                     return stsResult;
             }
 
-            stsResult = bc.TransmitNormal(handle, bc.Tx_ID,bc.cmdTransferEnd, timeout);
-            Td = new DataFormat { Time = bc.Tx.Time, ID = bc.Tx.ID, Length = bc.Tx.Length, Data = bc.Tx.Data };
-            Rd = new DataFormat { Time = bc.Rx.Time, ID = bc.Rx.ID, Length = bc.Rx.Length, Data = bc.Rx.Data };
-            Dispatcher.BeginInvoke(new Action(() =>
+            TxBin = bc.BinFormat(temp[3] + temp[4], binData);   //REFORMAT BIN DATA FOR TRANSMIT
+            foreach (byte[] frame in TxBin)
             {
-                collection.Add(Td);
-                collection.Add(Rd);
-                pbLoadScale.Value += 1;
-            }));
-            if (stsResult != TPCANStatus.PCAN_ERROR_OK)
+                stsResult = bc.TransmitNormal(handle, bc.Tx_ID, frame, timeout);
+                if (stsResult != TPCANStatus.PCAN_ERROR_OK && stsResult != TPCANStatus.PCAN_ERROR_RESPONSE)
+                    return stsResult;
+                else
+                {
+                    Td = new DataFormat { Time = bc.Tx.Time, ID = bc.Tx.ID, Length = bc.Tx.Length, Data = bc.Tx.Data };
+                    Rd = new DataFormat { Time = bc.Rx.Time, ID = bc.Rx.ID, Length = bc.Rx.Length, Data = bc.Rx.Data };
+                    bc.FCdelay(Rd.Data);
+
+                    Dispatcher.BeginInvoke(new Action(() => 
+                    {
+                        collection.Add(Td);
+                        collection.Add(Rd);
+                        pbLoadScale.Value += 1;
+                    }));
+                    if(stsResult == TPCANStatus.PCAN_ERROR_RESPONSE)
+                        return stsResult;
+                }
+            }
+
+            stsResult = bc.TransmitNormal(handle, bc.Tx_ID,bc.cmdTransferEnd, timeout);
+            if (stsResult != TPCANStatus.PCAN_ERROR_OK && stsResult != TPCANStatus.PCAN_ERROR_RESPONSE)
                 return stsResult;
+            else
+            {
+                Td = new DataFormat { Time = bc.Tx.Time, ID = bc.Tx.ID, Length = bc.Tx.Length, Data = bc.Tx.Data };
+                Rd = new DataFormat { Time = bc.Rx.Time, ID = bc.Rx.ID, Length = bc.Rx.Length, Data = bc.Rx.Data };
+                bc.FCdelay(Rd.Data);
+
+                Dispatcher.BeginInvoke(new Action(() => 
+                {
+                    collection.Add(Td);
+                    collection.Add(Rd);
+                    pbLoadScale.Value += 1;
+                }));
+                if(stsResult == TPCANStatus.PCAN_ERROR_RESPONSE)
+                    return stsResult;
+            }
 
             stsResult = bc.TransmitNormal(handle, bc.Tx_ID,bc.cmdPCUReset, timeout);
-            Td = new DataFormat { Time = bc.Tx.Time, ID = bc.Tx.ID, Length = bc.Tx.Length, Data = bc.Tx.Data };
-            Rd = new DataFormat { Time = bc.Rx.Time, ID = bc.Rx.ID, Length = bc.Rx.Length, Data = bc.Rx.Data };
-            Dispatcher.BeginInvoke(new Action(() =>
-            {
-                collection.Add(Td);
-                collection.Add(Rd);
-                pbLoadScale.Value += 1;
-            }));
-            if (stsResult != TPCANStatus.PCAN_ERROR_OK)
+            if (stsResult != TPCANStatus.PCAN_ERROR_OK && stsResult != TPCANStatus.PCAN_ERROR_RESPONSE)
                 return stsResult;
+            else
+            {
+                Td = new DataFormat { Time = bc.Tx.Time, ID = bc.Tx.ID, Length = bc.Tx.Length, Data = bc.Tx.Data };
+                Rd = new DataFormat { Time = bc.Rx.Time, ID = bc.Rx.ID, Length = bc.Rx.Length, Data = bc.Rx.Data };
+                bc.FCdelay(Rd.Data);
+
+                Dispatcher.BeginInvoke(new Action(() => 
+                {
+                    collection.Add(Td);
+                    collection.Add(Rd);
+                    pbLoadScale.Value += 1;
+                }));
+                if(stsResult == TPCANStatus.PCAN_ERROR_RESPONSE)
+                    return stsResult;
+            }
 
             stsResult = bc.TransmitNormal(handle, bc.Tx_ID, bc.cmdDiagnostic, timeout);
-            Td = new DataFormat { Time = bc.Tx.Time, ID = bc.Tx.ID, Length = bc.Tx.Length, Data = bc.Tx.Data };
-            Rd = new DataFormat { Time = bc.Rx.Time, ID = bc.Rx.ID, Length = bc.Rx.Length, Data = bc.Rx.Data };
-            Dispatcher.BeginInvoke(new Action(() =>
-            {
-                collection.Add(Td);
-                collection.Add(Rd);
-                pbLoadScale.Value += 1;
-            }));
-            if (stsResult != TPCANStatus.PCAN_ERROR_OK)
+            if (stsResult != TPCANStatus.PCAN_ERROR_OK && stsResult != TPCANStatus.PCAN_ERROR_RESPONSE)
                 return stsResult;
+            else
+            {
+                Td = new DataFormat { Time = bc.Tx.Time, ID = bc.Tx.ID, Length = bc.Tx.Length, Data = bc.Tx.Data };
+                Rd = new DataFormat { Time = bc.Rx.Time, ID = bc.Rx.ID, Length = bc.Rx.Length, Data = bc.Rx.Data };
+                bc.FCdelay(Rd.Data);
+
+                Dispatcher.BeginInvoke(new Action(() => 
+                {
+                    collection.Add(Td);
+                    collection.Add(Rd);
+                    pbLoadScale.Value += 1;
+                }));
+                if(stsResult == TPCANStatus.PCAN_ERROR_RESPONSE)
+                    return stsResult;
+            }
 
             stsResult = bc.TransmitOnly(handle, bc.Tx_ID_Config, bc.cmdConfigPCU4);
             Dispatcher.BeginInvoke(new Action(() => { 

@@ -80,6 +80,8 @@ namespace RDinterface
 
             ClearRxBuffer(handle);
 
+            Thread.Sleep(_delayTime);
+
             this.Tx.Time = DateTime.Now.TimeOfDay.ToString();
             this.Tx.ID = id;
             this.Tx.Length = command.Length.ToString();
@@ -142,6 +144,12 @@ namespace RDinterface
             return stsResult;
         }
 
+        /// <summary>
+        /// FORMAT RAW BIN FILE DATA BEFORE TRANSMIT
+        /// </summary>
+        /// <param name="BlockSize">TRANSMIT BLOCK SIZE</param>
+        /// <param name="BinData">RAW BIN DATA</param>
+        /// <returns></returns>
         public List<byte[]> BinFormat(string BlockSize, byte[] BinData)
         {
             int FFdataSize = 4;
@@ -215,6 +223,11 @@ namespace RDinterface
             return allFrame;
         }
 
+        /// <summary>
+        /// GET ADDRESS OF DIFFERENT BIN FILE TYPE
+        /// </summary>
+        /// <param name="binTarget">BIN FILE TYPE</param>
+        /// <returns></returns>
         public byte[] GetAddress(string binTarget)
         {
             byte[] address = new byte[4];
@@ -240,6 +253,21 @@ namespace RDinterface
             return address;
         }
 
+        public void FCdelay(string FC)
+        {
+            if(FC != null && FC != "")
+            {
+                string[] fc = FC.Split(" ");
+                
+                if(_delayTime < Convert.ToInt32(fc[2]))
+                    _delayTime = Convert.ToInt32(fc[2]);
+            }
+        }
+
+        /// <summary>
+        /// CLEAR RECEIVE DATA BUFFER
+        /// </summary>
+        /// <param name="handle">PCAN HANDLE</param>
         private void ClearRxBuffer(TPCANHandle handle)
         {
             TPCANStatus stsResult = 0;
