@@ -10,8 +10,6 @@ namespace RDinterface
 {
     public class FrameRW
     {
-        public TPCANStatus CanStatus { get; }
-
         public DataFormat ReturnData { get; }
 
         public FrameRW()

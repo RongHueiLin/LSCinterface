@@ -64,10 +64,21 @@ namespace RDinterface
             Rx = new DataFormat();
         }
 
-        public TPCANStatus TransmitNormal(TPCANHandle handle, string id, byte[] command)
+        /// <summary>
+        /// TRANSMIT DATA AND GETTING RESPONSE
+        /// </summary>
+        /// <param name="handle">PCAN HANDLE</param>
+        /// <param name="id">PCAN TRANSMIT ID</param>
+        /// <param name="command">PCAN TRANSMIT DATA</param>
+        /// <param name="timeout">TIMEOUT FOR RESPONSE</param>
+        /// <returns></returns>
+        public TPCANStatus TransmitNormal(TPCANHandle handle, string id, byte[] command,int timeout)
         {
             TPCANStatus stsResult;
+            bool getR = false;
             FrameRW frame = new FrameRW();
+
+            ClearRxBuffer(handle);
 
             this.Tx.Time = DateTime.Now.TimeOfDay.ToString();
             this.Tx.ID = id;
@@ -76,22 +87,50 @@ namespace RDinterface
 
             stsResult = frame.WriteFrame(handle, id, command);
 
-            Thread.Sleep(_delayTime);
-
             if (stsResult == TPCANStatus.PCAN_ERROR_OK)
             {
-                stsResult = frame.ReadFrame(handle);
+                while (timeout > 0)
+                {
+                    Thread.Sleep(1);
 
-                if (stsResult == TPCANStatus.PCAN_ERROR_OK || stsResult ==TPCANStatus.PCAN_ERROR_RESPONSE)
-                    this.Rx = frame.ReturnData;
+                    stsResult = frame.ReadFrame(handle);
+
+                    timeout--;
+
+                    if (stsResult == TPCANStatus.PCAN_ERROR_OK || stsResult == TPCANStatus.PCAN_ERROR_RESPONSE)
+                    {
+                        this.Rx = frame.ReturnData;
+                        getR = true;
+
+                        if(stsResult == TPCANStatus.PCAN_ERROR_RESPONSE)
+                            break;
+                    }
+                    else if(stsResult == TPCANStatus.PCAN_ERROR_QRCVEMPTY)
+                    {
+                        if(getR)
+                        {
+                            stsResult = TPCANStatus.PCAN_ERROR_OK;
+                            break;
+                        }
+                    }
+                }
             }
             return stsResult;
         }
 
+        /// <summary>
+        /// TRANSMIT DATA WITHOUT GETTING RESPONSE
+        /// </summary>
+        /// <param name="handle">PCAN HANDLE</param>
+        /// <param name="id">PCAN TRANSMIT ID</param>
+        /// <param name="command">PCAN TRANSMIT DATA</param>
+        /// <returns></returns>
         public TPCANStatus TransmitOnly(TPCANHandle handle, string id, byte[] command)
         {
             TPCANStatus stsResult;
             FrameRW frame = new FrameRW();
+
+            ClearRxBuffer(handle);
 
             this.Tx.Time = DateTime.Now.TimeOfDay.ToString();
             this.Tx.ID = id;
@@ -199,6 +238,15 @@ namespace RDinterface
                     break;
             }
             return address;
+        }
+
+        private void ClearRxBuffer(TPCANHandle handle)
+        {
+            TPCANStatus stsResult = 0;
+            FrameRW frame = new FrameRW();
+
+            while(stsResult != TPCANStatus.PCAN_ERROR_QRCVEMPTY)
+                stsResult = frame.ReadFrame(handle);
         }
     }
 }
