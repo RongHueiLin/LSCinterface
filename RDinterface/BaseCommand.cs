@@ -9,59 +9,38 @@ namespace RDinterface
     public class BaseCommand
     {
         public string Tx_ID = "300";
-
         public string Tx_ID_Config = "30F";
-
         private byte[] cmdFstFrame = new byte[] { 16, 0, 54, 0, 0, 0, 0, 0 };
-
         private byte[] cmdConseqFrame = new byte[] { 32, 0, 0, 0, 0, 0, 0, 0 };
-
-        public byte[] cmdDiagnostic = new byte[] { 2, 16, 3, 0, 0, 0, 0, 0 };
-
-        public byte[] cmdConfigPCU1 = new byte[] { 2, 16, 131, 0, 0, 0, 0, 0 };
-
-        public byte[] cmdConfigPCU2 = new byte[] { 2, 133, 130, 0, 0, 0, 0, 0 };
-
-        public byte[] cmdConfigPCU3 = new byte[] { 3, 40, 130, 3, 0, 0, 0, 0 };
-
-        public byte[] cmdConfigPCU4 = new byte[] { 3, 40,128, 3, 0, 0, 0, 0 };
-
-        public byte[] cmdConfigPCU5 = new byte[] { 2, 133, 129, 0, 0, 0, 0, 0 };
-
-        public byte[] cmdConfigPCU6 = new byte[] { 2, 16, 129, 0, 0, 0, 0, 0 };
-
-        public byte[] cmdProgramming = new byte[] { 2, 16, 2, 0, 0, 0, 0, 0 };
-
-        public byte[] cmdDownloadReq1 = new byte[] { 16, 11, 52, 0, 68, 0, 0, 0 };
-
-        public byte[] cmdDownloadReq2 = new byte[] { 33, 0, 0, 0, 0, 0, 0, 0 };
-
-        public byte[] cmdTransferEnd = new byte[] { 5, 55, 152, 244, 204, 51, 0, 0 };
-
-        public byte[] cmdPCUReset = new byte[] { 2, 17, 1, 0, 0, 0, 0, 0 };
-
-        public byte[] AddressBinA = new byte[] { 8, 4, 0, 0 };
-
-        public byte[] AddressBinS = new byte[] { 8, 0, 136, 0 };
-
-        public byte[] AddressBinP = new byte[] { 8, 0, 168, 0 };
-
-        public byte[] AddressBinM1 = new byte[] { 8, 0, 200, 0 };
-
-        public byte[] AddressBinM2 = new byte[] { 8, 1, 24, 0 };
-
+        public readonly byte[] cmdDiagnostic = new byte[] { 2, 16, 3, 0, 0, 0, 0, 0 };
+        public readonly byte[] cmdConfigPCU1 = new byte[] { 2, 16, 131, 0, 0, 0, 0, 0 };
+        public readonly byte[] cmdConfigPCU2 = new byte[] { 2, 133, 130, 0, 0, 0, 0, 0 };
+        public readonly byte[] cmdConfigPCU3 = new byte[] { 3, 40, 130, 3, 0, 0, 0, 0 };
+        public readonly byte[] cmdConfigPCU4 = new byte[] { 3, 40,128, 3, 0, 0, 0, 0 };
+        public readonly byte[] cmdConfigPCU5 = new byte[] { 2, 133, 129, 0, 0, 0, 0, 0 };
+        public readonly byte[] cmdConfigPCU6 = new byte[] { 2, 16, 129, 0, 0, 0, 0, 0 };
+        public readonly byte[] cmdProgramming = new byte[] { 2, 16, 2, 0, 0, 0, 0, 0 };
+        public readonly byte[] cmdDownloadReq1 = new byte[] { 16, 11, 52, 0, 68, 0, 0, 0 };
+        public readonly byte[] cmdDownloadReq2 = new byte[] { 33, 0, 0, 0, 0, 0, 0, 0 };
+        public readonly byte[] cmdTransferEnd = new byte[] { 5, 55, 152, 244, 204, 51, 0, 0 };
+        public readonly byte[] cmdPCUReset = new byte[] { 2, 17, 1, 0, 0, 0, 0, 0 };
+        public readonly byte[] AddressBinA = new byte[] { 8, 4, 0, 0 };
+        public readonly byte[] AddressBinS = new byte[] { 8, 0, 136, 0 };
+        public readonly byte[] AddressBinP = new byte[] { 8, 0, 168, 0 };
+        public readonly byte[] AddressBinM1 = new byte[] { 8, 0, 200, 0 };
+        public readonly byte[] AddressBinM2 = new byte[] { 8, 1, 24, 0 };
         public DataFormat Tx { get; set; }
-
         public DataFormat Rx { get; set; }
-
-        private int _delayTime = 10;
-
+        public string Status { get{ return _status; } }
         public string DelayTime { set { _delayTime = Convert.ToInt32(value); } }
+        private string _status;
+        private int _delayTime;
 
         public BaseCommand()
         {
-            Tx = new DataFormat();
-            Rx = new DataFormat();
+            this._delayTime = 1;
+            this.Tx = new DataFormat();
+            this.Rx = new DataFormat();
         }
 
         /// <summary>
@@ -78,8 +57,6 @@ namespace RDinterface
             bool getR = false;
             FrameRW frame = new FrameRW();
 
-            ClearRxBuffer(handle);
-
             Thread.Sleep(_delayTime);
 
             this.Tx.Time = DateTime.Now.TimeOfDay.ToString();
@@ -87,6 +64,7 @@ namespace RDinterface
             this.Tx.Length = command.Length.ToString();
             this.Tx.Data = BitConverter.ToString(command).Replace("-", " ");
 
+            this._status = "Write";
             stsResult = frame.WriteFrame(handle, id, command);
 
             if (stsResult == TPCANStatus.PCAN_ERROR_OK)
@@ -94,7 +72,8 @@ namespace RDinterface
                 while (timeout > 0)
                 {
                     Thread.Sleep(1);
-
+                    
+                    this._status = "Read";
                     stsResult = frame.ReadFrame(handle);
 
                     timeout--;
@@ -132,13 +111,12 @@ namespace RDinterface
             TPCANStatus stsResult;
             FrameRW frame = new FrameRW();
 
-            ClearRxBuffer(handle);
-
             this.Tx.Time = DateTime.Now.TimeOfDay.ToString();
             this.Tx.ID = id;
             this.Tx.Length = command.Length.ToString();
             this.Tx.Data = BitConverter.ToString(command).Replace("-", " ");
 
+            this._status = "Write";
             stsResult = frame.WriteFrame(handle, id, command);
 
             return stsResult;
@@ -259,22 +237,9 @@ namespace RDinterface
             {
                 string[] fc = FC.Split(" ");
                 
-                if(_delayTime < Convert.ToInt32(fc[2]))
-                    _delayTime = Convert.ToInt32(fc[2]);
+                if(this._delayTime < Convert.ToInt32(fc[2]))
+                    this._delayTime = Convert.ToInt32(fc[2]);
             }
-        }
-
-        /// <summary>
-        /// CLEAR RECEIVE DATA BUFFER
-        /// </summary>
-        /// <param name="handle">PCAN HANDLE</param>
-        private void ClearRxBuffer(TPCANHandle handle)
-        {
-            TPCANStatus stsResult = 0;
-            FrameRW frame = new FrameRW();
-
-            while(stsResult != TPCANStatus.PCAN_ERROR_QRCVEMPTY)
-                stsResult = frame.ReadFrame(handle);
         }
     }
 }
