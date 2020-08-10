@@ -51,7 +51,7 @@ namespace RDinterface
                 this.ReturnData.Length = CANMsg.DATA.Length.ToString();
                 this.ReturnData.Data = BitConverter.ToString(CANMsg.DATA).Replace("-", " ");
 
-                if (CANMsg.DATA[0] == 127 || CANMsg.DATA[1] == 127)
+                if (CANMsg.DATA[0] == 3 || CANMsg.DATA[1] == 127)
                     stsResult = TPCANStatus.PCAN_ERROR_RESPONSE;
             }
             return stsResult;

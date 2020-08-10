@@ -59,6 +59,9 @@ namespace RDinterface
 
             Thread.Sleep(_delayTime);
 
+            do { stsResult = frame.ReadFrame(handle); }
+            while (stsResult == TPCANStatus.PCAN_ERROR_OK);
+
             this.Tx.Time = DateTime.Now.TimeOfDay.ToString();
             this.Tx.ID = id;
             this.Tx.Length = command.Length.ToString();
@@ -111,6 +114,8 @@ namespace RDinterface
             TPCANStatus stsResult;
             FrameRW frame = new FrameRW();
 
+            Thread.Sleep(_delayTime);
+
             this.Tx.Time = DateTime.Now.TimeOfDay.ToString();
             this.Tx.ID = id;
             this.Tx.Length = command.Length.ToString();
@@ -128,26 +133,26 @@ namespace RDinterface
         /// <param name="BlockSize">TRANSMIT BLOCK SIZE</param>
         /// <param name="BinData">RAW BIN DATA</param>
         /// <returns></returns>
-        public List<byte[]> BinFormat(string BlockSize, byte[] BinData)
+        public List<byte[]> BinFormat(int BlockSize, byte[] BinData)
         {
             int FFdataSize = 4;
             int CFdataSize = 7;
             List<byte[]> BFrame = new List<byte[]>();   //BLOCK DATA BUFFER
             List<byte[]> allFrame = new List<byte[]>(); //FRAME DATA BUFFER
-            int blockSize = Convert.ToInt32(BlockSize, 16); //MAX SIZE OF A BLOCK
-            int blockCount = BinData.Length / blockSize;    //NUMBER OF FULL BLOCK
-            int LstBlockSize = BinData.Length % blockSize;  //LAST BLOCK DATA SIZE
+            int blockCount = BinData.Length / BlockSize;    //NUMBER OF FULL BLOCK
+            int LstBlockSize = BinData.Length % BlockSize;  //LAST BLOCK DATA SIZE
 
             //SPLIT BIN DATA BY BLOCK SIZE
             for (int i = 0; i < blockCount; i++)
             {
-                BFrame.Add(new byte[blockSize]);
-                Array.Copy(BinData, 0 + i * blockSize, BFrame[i], 0, blockSize);
+                BFrame.Add(new byte[BlockSize]);
+                Array.Copy(BinData, 0 + i * BlockSize, BFrame[i], 0, BlockSize);
             }
+
             if (LstBlockSize != 0)
             {
                 BFrame.Add(new byte[LstBlockSize]);
-                Array.Copy(BinData, blockSize * blockCount, BFrame[blockCount], 0, LstBlockSize);
+                Array.Copy(BinData, BlockSize * blockCount, BFrame[blockCount], 0, LstBlockSize);
             }
 
             //SPLIT BLOCK DATA INTO FRAME

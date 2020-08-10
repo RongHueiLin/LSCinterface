@@ -18,6 +18,7 @@ namespace RDinterface
     public partial class MainWindow : Window
     {
         byte[] DatabyteA, DatabyteS, DatabyteP, DatabyteM1, DatabyteM2;
+        double BindataCnt, BindataTotal;
         TPCANStatus stsResult;
         private TPCANHandle m_PcanHandle;   //DEVICE HANDLE
         private TPCANBaudrate m_Baudrate = TPCANBaudrate.PCAN_BAUD_500K;   //TRANSMIT BAUD RATE
@@ -212,6 +213,7 @@ namespace RDinterface
 
             GridFW.IsEnabled = false;
             btnRelease.IsEnabled = false;
+            BindataCnt = 0;
             pbLoadScale.Value = 0;
 
             if (cbBinA.IsChecked == true && DatabyteA != null)
@@ -233,7 +235,7 @@ namespace RDinterface
                 {
                     cmdNUM += (bin.Value.Length / 7) + 13;
                 }
-                pbLoadScale.Maximum = cmdNUM;   //UPDATE PROGRESSBAR MAXIMUM VALUE
+                BindataTotal = cmdNUM;
 
                 //RUN WRITE BIN FILE THREAD
                 try
@@ -250,14 +252,14 @@ namespace RDinterface
                                 break;
                         }
                     });
-                }
-                catch(Exception ex)
-                {
-                    tbAlarmLog.Text += ex.Message;
-                }
+            }
+                catch (Exception ex)
+            {
+                tbAlarmLog.Text += ex.Message;
+            }
 
-                //UPDATE LOG IF ERROR OCCUR
-                if (stsResult == TPCANStatus.PCAN_ERROR_RESPONSE)
+            //UPDATE LOG IF ERROR OCCUR
+            if (stsResult == TPCANStatus.PCAN_ERROR_RESPONSE)
                     tbAlarmLog.Text += $"{stsResult} :  {bc.Rx.Data}\n";
                 else if(stsResult != TPCANStatus.PCAN_ERROR_OK)
                     tbAlarmLog.Text += $"PCAN Error : {stsResult}\n";
@@ -416,43 +418,43 @@ namespace RDinterface
             Array.Copy(address, 3, DLrequest2, 1, 1);
 
             stsResult = bc.TransmitNormal(handle, bc.Tx_ID,bc.cmdDiagnostic, timeout);
-            UpdateRawData();
+            UpdateRawData(false);
             if (stsResult != TPCANStatus.PCAN_ERROR_OK)
                 return stsResult;
 
             stsResult = bc.TransmitOnly(handle, bc.Tx_ID_Config,bc.cmdConfigPCU1);
-            UpdateRawData();
+            UpdateRawData(false);
             if (stsResult == TPCANStatus.PCAN_ERROR_OK)
                 Thread.Sleep(1000);
             else
                 return stsResult;
 
             stsResult = bc.TransmitOnly(handle, bc.Tx_ID_Config, bc.cmdConfigPCU2);
-            UpdateRawData();
+            UpdateRawData(false);
             if (stsResult == TPCANStatus.PCAN_ERROR_OK)
                 Thread.Sleep(1000);
             else
                 return stsResult;
 
             stsResult = bc.TransmitOnly(handle, bc.Tx_ID_Config, bc.cmdConfigPCU3);
-            UpdateRawData();
+            UpdateRawData(false);
             if (stsResult == TPCANStatus.PCAN_ERROR_OK)
                 Thread.Sleep(1000);
             else
                 return stsResult;
 
             stsResult = bc.TransmitNormal(handle, bc.Tx_ID, bc.cmdProgramming, timeout);
-            UpdateRawData();
+            UpdateRawData(false);
             if (stsResult != TPCANStatus.PCAN_ERROR_OK)
                 return stsResult;
 
             stsResult = bc.TransmitNormal(handle, bc.Tx_ID, DLrequest1, timeout);
-            UpdateRawData();
+            UpdateRawData(true);
             if (stsResult != TPCANStatus.PCAN_ERROR_OK)
                 return stsResult;
 
             stsResult = bc.TransmitNormal(handle, bc.Tx_ID, DLrequest2, timeout);
-            UpdateRawData();
+            UpdateRawData(false);
             if(stsResult == TPCANStatus.PCAN_ERROR_OK)
             {
                 if (bc.Rx.Data != null && bc.Rx.Data != "")
@@ -461,46 +463,87 @@ namespace RDinterface
             else
                 return stsResult;
 
-            TxBin = bc.BinFormat(temp[3] + temp[4], binData);   //REFORMAT BIN DATA FOR TRANSMIT
+            int blocksize = Convert.ToInt32(temp[3]+temp[4], 16);
+            TxBin = bc.BinFormat(blocksize, binData);   //REFORMAT BIN DATA FOR TRANSMIT
+            
+            int FCcnt = 0;
+            int BlockCnt = 1;
+            int FrameCnt = 1;
+            double BlockNum = Math.Ceiling(Convert.ToDouble(blocksize) / 7);
+
             foreach (byte[] frame in TxBin)
             {
-                stsResult = bc.TransmitNormal(handle, bc.Tx_ID, frame, timeout);
-                UpdateRawData();
+                if (FrameCnt < TxBin.Count)
+                {
+                    if (BlockCnt == 1 || BlockCnt == (int)BlockNum)
+                    {
+                        stsResult = bc.TransmitNormal(handle, bc.Tx_ID, frame, timeout);
+                        UpdateRawData(false);
+
+                        if(BlockCnt == (int)BlockNum)
+                            BlockCnt = 0;
+
+                        FCcnt = 0;
+                    }
+                    else
+                    {
+                        if(FCcnt == 10)
+                        {
+                            stsResult = bc.TransmitNormal(handle, bc.Tx_ID, frame, timeout);
+                            UpdateRawData(true);
+                            FCcnt = 0;
+                        }
+                        else
+                        {
+                            stsResult = bc.TransmitOnly(handle, bc.Tx_ID, frame);
+                            UpdateRawData(false);
+                        }
+                    }
+                    FCcnt++;
+                    BlockCnt++;
+                    FrameCnt++;
+                }
+                else
+                {
+                    stsResult = bc.TransmitNormal(handle, bc.Tx_ID, frame, timeout);
+                    UpdateRawData(false);
+                }
+
                 if (stsResult != TPCANStatus.PCAN_ERROR_OK)
                     return stsResult;
             }
 
             stsResult = bc.TransmitNormal(handle, bc.Tx_ID,bc.cmdTransferEnd, timeout);
-            UpdateRawData();
+            UpdateRawData(false);
             if (stsResult != TPCANStatus.PCAN_ERROR_OK)
                 return stsResult;
 
             stsResult = bc.TransmitNormal(handle, bc.Tx_ID,bc.cmdPCUReset, timeout);
-            UpdateRawData();
+            UpdateRawData(false);
             if (stsResult != TPCANStatus.PCAN_ERROR_OK)
                 return stsResult;
 
             stsResult = bc.TransmitNormal(handle, bc.Tx_ID, bc.cmdDiagnostic, timeout);
-            UpdateRawData();
+            UpdateRawData(false);
             if (stsResult != TPCANStatus.PCAN_ERROR_OK)
                 return stsResult;
 
             stsResult = bc.TransmitOnly(handle, bc.Tx_ID_Config, bc.cmdConfigPCU4);
-            UpdateRawData();
+            UpdateRawData(false);
             if (stsResult == TPCANStatus.PCAN_ERROR_OK)
                 Thread.Sleep(1000);
             else
                 return stsResult;
 
             stsResult = bc.TransmitOnly(handle, bc.Tx_ID_Config, bc.cmdConfigPCU5);
-            UpdateRawData();
+            UpdateRawData(false);
             if (stsResult == TPCANStatus.PCAN_ERROR_OK)
                 Thread.Sleep(1000);
             else
                 return stsResult;
 
             stsResult = bc.TransmitOnly(handle, bc.Tx_ID_Config, bc.cmdConfigPCU6);
-            UpdateRawData();
+            UpdateRawData(false);
             if (stsResult == TPCANStatus.PCAN_ERROR_OK)
                 Thread.Sleep(1000);
             else
@@ -509,25 +552,30 @@ namespace RDinterface
             return stsResult;
         }
 
-        private void UpdateRawData()
+        private void UpdateRawData(bool delay)
         {
             DataFormat Td, Rd;
 
             if(bc.Status == "Write" && stsResult == TPCANStatus.PCAN_ERROR_OK)
             {
                 Td = new DataFormat { Time = bc.Tx.Time, ID = bc.Tx.ID, Length = bc.Tx.Length, Data = bc.Tx.Data };
-                Dispatcher.BeginInvoke(new Action(() => { collection.Add(Td); pbLoadScale.Value++; }));
+                Dispatcher.BeginInvoke(new Action(() => { 
+                    collection.Add(Td);
+                    pbLoadScale.Value = (BindataCnt++) / BindataTotal * 100;
+                }));
             }
             else if(bc.Status == "Read")
             {
                 Td = new DataFormat { Time = bc.Tx.Time, ID = bc.Tx.ID, Length = bc.Tx.Length, Data = bc.Tx.Data };
-                Dispatcher.BeginInvoke(new Action(() => { collection.Add(Td); pbLoadScale.Value++; }));
+                Dispatcher.BeginInvoke(new Action(() => { 
+                    collection.Add(Td);
+                    pbLoadScale.Value = (BindataCnt++) / BindataTotal * 100;
+                }));
 
                 if(stsResult == TPCANStatus.PCAN_ERROR_OK || stsResult == TPCANStatus.PCAN_ERROR_RESPONSE)
                 {
                     Rd = new DataFormat { Time = bc.Rx.Time, ID = bc.Rx.ID, Length = bc.Rx.Length, Data = bc.Rx.Data };
                     Dispatcher.BeginInvoke(new Action(() => { collection.Add(Rd); }));
-                    bc.FCdelay(Rd.Data);
                 }
             }
         }
